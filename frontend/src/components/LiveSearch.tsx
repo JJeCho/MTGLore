@@ -50,27 +50,27 @@ const LiveSearch = ({ onResultClick }: { onResultClick: (category: string, name:
   }, [data]);
 
   return (
-    <div>
+    <div className="w-full max-w-md mx-auto mt-6">
       <input
         type="text"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder="Search for Planeswalkers, Creatures, Sets, Cards, etc."
-        className="border border-gray-300 rounded px-2 py-1"
+        className="border border-gray-300 w-full p-3 rounded-lg shadow-sm focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition duration-200"
       />
 
-      {loading && <p>Searching...</p>}
-      {error && <p>Error: {error.message}</p>}
+      {loading && <p className="text-gray-500 text-center mt-2">Searching...</p>}
+      {error && <p className="text-red-500 text-center mt-2">Error: {error.message}</p>}
 
       {searchResults.length > 0 && (
-        <ul className="mt-2">
+        <ul className="mt-4 bg-white shadow-lg rounded-lg divide-y divide-gray-200">
           {searchResults.map((result, index) => (
-            <li key={index} className="mb-1">
+            <li key={index} className="p-4 hover:bg-blue-50 transition duration-150">
               <button
                 onClick={() => onResultClick(result.category, result.name)}
-                className="text-blue-500 hover:underline"
+                className="text-blue-600 hover:text-blue-800 font-medium"
               >
-                {result.name} ({result.category})
+                {result.name} <span className="text-gray-500">({result.category})</span>
               </button>
             </li>
           ))}

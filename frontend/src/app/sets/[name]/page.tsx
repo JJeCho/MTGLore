@@ -51,9 +51,9 @@ const SetPage = ({ params }: { params: { name: string } }) => {
     fetchSetData();
   }, [name, decodedName]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
-  if (!setData) return <div>No data found</div>;
+  if (loading) return <div className="text-center mt-10">Loading...</div>;
+  if (error) return <div className="text-red-500 text-center mt-10">{error}</div>;
+  if (!setData) return <div className="text-center mt-10">No data found</div>;
 
   // Function to handle card click, navigating to /cards/[name]
   const handleCardClick = (cardName: string) => {
@@ -61,30 +61,33 @@ const SetPage = ({ params }: { params: { name: string } }) => {
   };
 
   return (
-    <div>
-      <h1>{setData.name}</h1>
-      <p>Base Set Size: {setData.baseSetSize}</p>
-      <p>Release Date: {setData.releaseDate}</p>
-      <p>Total Set Size: {setData.totalSetSize}</p>
-      <p>Type: {setData.type}</p>
+    <div className="container mx-auto mt-8 px-4">
+      <h1 className="text-3xl font-bold text-center mb-6">{setData.name}</h1>
 
-      <h2>Cards in Set:</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"> {/* Responsive grid layout */}
+      <div className="bg-gray-100 p-6 rounded-lg shadow-md mb-8">
+        <p className="text-lg"><span className="font-semibold">Base Set Size:</span> {setData.baseSetSize}</p>
+        <p className="text-lg"><span className="font-semibold">Release Date:</span> {setData.releaseDate}</p>
+        <p className="text-lg"><span className="font-semibold">Total Set Size:</span> {setData.totalSetSize}</p>
+        <p className="text-lg"><span className="font-semibold">Type:</span> {setData.type}</p>
+      </div>
+
+      <h2 className="text-2xl font-semibold mb-4">Cards in Set:</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {setData.cards.length > 0 ? (
           setData.cards.map((card) => (
             <div
               key={card.name}
-              className="card-container border border-gray-300 rounded p-4 cursor-pointer hover:shadow-lg transition-shadow"
+              className="border border-gray-300 bg-white rounded-lg p-6 shadow hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => handleCardClick(card.name)} // Navigate on click
             >
-              <h3 className="font-bold text-lg">{card.name}</h3>
-              <p>Type: {card.type ?? 'Unknown type'}</p>
-              <p>Rarity: {card.rarity ?? 'Unknown rarity'}</p>
-              <p>Mana Value: {card.manaValue !== null ? card.manaValue : 'N/A'}</p>
+              <h3 className="font-bold text-xl mb-2">{card.name}</h3>
+              <p className="text-gray-700">Type: {card.type ?? 'Unknown type'}</p>
+              <p className="text-gray-700">Rarity: {card.rarity ?? 'Unknown rarity'}</p>
+              <p className="text-gray-700">Mana Value: {card.manaValue !== null ? card.manaValue : 'N/A'}</p>
             </div>
           ))
         ) : (
-          <p>No cards found in this set.</p>
+          <p className="text-gray-500">No cards found in this set.</p>
         )}
       </div>
     </div>

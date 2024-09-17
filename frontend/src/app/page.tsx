@@ -27,12 +27,22 @@ const HomePage = () => {
   };
 
   return (
-    <div>
-      <h1>Magic: The Gathering Lore Encyclopedia</h1>
-      <p>Search for lore by name:</p>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 flex flex-col items-center justify-center p-6 md:p-12 lg:p-16">
+      <div className="bg-white shadow-xl rounded-lg p-6 sm:p-8 md:p-12 lg:p-16 max-w-lg w-full lg:max-w-4xl">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-blue-700 mb-4">
+          Magic: The Gathering Lore Encyclopedia
+        </h1>
+        <p className="text-gray-700 text-center text-base sm:text-lg md:text-xl mb-6">
+          Search for your favorite cards, sets, and more from the Magic: The Gathering universe.
+        </p>
 
-      {/* Use the LiveSearch component and pass the handleNavigate function */}
-      <LiveSearch onResultClick={handleNavigate} />
+        {/* LiveSearch component */}
+        <LiveSearch onResultClick={handleNavigate} />
+
+        <div className="text-sm sm:text-base text-center text-gray-500 mt-6">
+          Powered by GraphQL and Neo4j
+        </div>
+      </div>
     </div>
   );
 };
