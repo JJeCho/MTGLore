@@ -1,36 +1,6 @@
 const { gql } = require('apollo-server-express');
 
 const typeDefs = gql`
-  type Planeswalker {
-    name: String!
-    description: String!
-  }
-
-  type Creature {
-    name: String!
-    description: String!
-  }
-
-  type Artifact {
-    name: String!
-    description: String!
-  }
-
-  type Land {
-    name: String!
-    description: String!
-  }
-
-  type Plane {
-    name: String!
-    description: String!
-    locations: [Location]
-  }
-
-  type Location {
-    name: String!
-    description: String!
-  }
 
   # CardSet type (individual cards)
   type CardSet {
@@ -52,26 +22,31 @@ const typeDefs = gql`
     releaseDate: String!
     totalSetSize: Int!
     type: String!
+    code: String!
     cards: [CardSet!]!
   }
 
-  type Query {
-    planeswalkers: [Planeswalker!]
-    planeswalker(name: String!): Planeswalker
-    creatures: [Creature!]
-    creature(name: String!): Creature
-    artifacts: [Artifact!]
-    artifact(name: String!): Artifact
-    lands: [Land!]
-    land(name: String!): Land
-    planes: [Plane!]
-    plane(name: String!): Plane
+type SearchResult {
+  name: String!
+  category: String!
+}
 
-    # Set-related queries
-    sets: [Set!]
+type Query {
+  search(searchTerm: String!): [SearchResult!]!
+}
+
+  # Queries for fetching models
+  type Query {
+    search(searchTerm: String!): [SearchResult!]!
+
+    # Fetch all card sets with optional pagination
+    sets(limit: Int, offset: Int): [Set!]
+
+    # Fetch a single set by name
     set(name: String!): Set
+
+    # Fetch a card by name
     cardSet(name: String!): CardSet
-    cardsInSet(name: String!): [CardSet!]
   }
 `;
 

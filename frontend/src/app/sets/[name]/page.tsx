@@ -1,16 +1,14 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation'; // For navigation in Next.js
 import { fetchLore } from '@/lib/api'; // Ensure this is correctly importing fetchLore
 
 type CardSet = {
-  uuid: string;
   name: string;
   manaValue: number | null;
   rarity: string | null;
   type: string | null;
   colors: string[];
-  power: string | null;
-  toughness: string | null;
 };
 
 type SetData = {
@@ -24,6 +22,7 @@ type SetData = {
 
 const SetPage = ({ params }: { params: { name: string } }) => {
   const { name } = params;
+  const router = useRouter(); // Use router for navigation
 
   const [setData, setSetData] = useState<SetData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -31,13 +30,7 @@ const SetPage = ({ params }: { params: { name: string } }) => {
 
   const decodedName = decodeURIComponent(name);
 
-  // Log params and name to debug
-  console.log("Params:", params);
-  console.log("Name:", name);
-  console.log("Decoded Name:", decodedName);
-
   useEffect(() => {
-    // Check if name is available
     if (!name) {
       console.log("No name provided, skipping fetch");
       return;
@@ -45,9 +38,7 @@ const SetPage = ({ params }: { params: { name: string } }) => {
 
     const fetchSetData = async () => {
       try {
-        console.log("Fetching set data for:", decodedName);
         const data = await fetchLore(decodedName, 'Set'); // Fetch set data using fetchLore
-        console.log(data)
         setSetData(data);
       } catch (err) {
         console.error("Error fetching set data:", err);
@@ -58,11 +49,16 @@ const SetPage = ({ params }: { params: { name: string } }) => {
     };
 
     fetchSetData();
-  }, [name, decodedName]); // Depend on both 'name' and 'decodedName'
+  }, [name, decodedName]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
   if (!setData) return <div>No data found</div>;
+
+  // Function to handle card click, navigating to /cards/[name]
+  const handleCardClick = (cardName: string) => {
+    router.push(`/cards/${encodeURIComponent(cardName)}`); // Navigate to card page
+  };
 
   return (
     <div>
@@ -71,16 +67,26 @@ const SetPage = ({ params }: { params: { name: string } }) => {
       <p>Release Date: {setData.releaseDate}</p>
       <p>Total Set Size: {setData.totalSetSize}</p>
       <p>Type: {setData.type}</p>
+
       <h2>Cards in Set:</h2>
-      <ul>
-  {setData.cards.map((card) => (
-    <li key={card.uuid}>
-      {card.name} - {card.type ?? 'Unknown type'} - {card.rarity ?? 'Unknown rarity'}
-      <br />
-      Mana Value: {card.manaValue !== null ? card.manaValue : 'N/A'} <br />
-    </li>
-  ))}
-</ul>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"> {/* Responsive grid layout */}
+        {setData.cards.length > 0 ? (
+          setData.cards.map((card) => (
+            <div
+              key={card.name}
+              className="card-container border border-gray-300 rounded p-4 cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => handleCardClick(card.name)} // Navigate on click
+            >
+              <h3 className="font-bold text-lg">{card.name}</h3>
+              <p>Type: {card.type ?? 'Unknown type'}</p>
+              <p>Rarity: {card.rarity ?? 'Unknown rarity'}</p>
+              <p>Mana Value: {card.manaValue !== null ? card.manaValue : 'N/A'}</p>
+            </div>
+          ))
+        ) : (
+          <p>No cards found in this set.</p>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,6 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { gql, useLazyQuery } from '@apollo/client';
+
+// Define the GraphQL query for searching
+const SEARCH_QUERY = gql`
+  query Search($searchTerm: String!) {
+    search(searchTerm: $searchTerm) {
+      name
+      category
+    }
+  }
+`;
 
 type SearchResult = {
   name: string;
@@ -10,44 +21,33 @@ type SearchResult = {
 const LiveSearch = ({ onResultClick }: { onResultClick: (category: string, name: string) => void }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  // Debouncing state and timeout to avoid sending requests too frequently
+  // Apollo Client lazy query for searching
+  const [search, { loading, data, error }] = useLazyQuery(SEARCH_QUERY);
+
+  // Debounce search term to avoid over-querying
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 300); // 300ms delay for debouncing
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   useEffect(() => {
-    const fetchResults = async () => {
-      if (debouncedSearchTerm) {
-        setLoading(true);
+    if (debouncedSearchTerm) {
+      // Trigger the GraphQL query when the debounced search term changes
+      search({ variables: { searchTerm: debouncedSearchTerm } });
+    }
+  }, [debouncedSearchTerm, search]);
 
-        try {
-          // Fetch search results from the server-side API
-          const response = await fetch(`/api/search?searchTerm=${debouncedSearchTerm}`, {
-            method: 'POST',
-          });
-
-          const results: SearchResult[] = await response.json();
-          setSearchResults(results);
-        } catch (error) {
-          console.error('Error fetching search results:', error);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        setSearchResults([]);
-      }
-    };
-
-    fetchResults();
-  }, [debouncedSearchTerm]);
+  useEffect(() => {
+    if (data && data.search) {
+      setSearchResults(data.search);
+    }
+  }, [data]);
 
   return (
     <div>
@@ -60,6 +60,7 @@ const LiveSearch = ({ onResultClick }: { onResultClick: (category: string, name:
       />
 
       {loading && <p>Searching...</p>}
+      {error && <p>Error: {error.message}</p>}
 
       {searchResults.length > 0 && (
         <ul className="mt-2">

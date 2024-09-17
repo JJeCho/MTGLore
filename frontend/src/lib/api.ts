@@ -1,143 +1,85 @@
 import { gql } from '@apollo/client';
-import client from './apolloClient'; // Assuming Apollo Client is set up
+import client from './apolloClient'; // Ensure Apollo Client is properly set up
 
-export const fetchLore = async (name: string, category: string) => {
-  let query;
+// Function to fetch data from the server using Apollo Client
+export const fetchLore = async (
+  name: string,
+  category: 'Card' | 'Set', // Enforce specific categories
+  options = { cache: false } // Allow optional caching control
+) => {
+  if (!name || !category) {
+    throw new Error('Name and category must be provided');
+  }
 
   // Decode the name to handle URL-encoded characters
   const decodedName = decodeURIComponent(name);
-  console.log(decodedName, name)
-  // Dynamically choose the query based on the category
-  switch (category) {
-    case 'Planeswalker':
-      query = gql`
-        query GetPlaneswalker($name: String!) {
-          planeswalker(name: $name) {
-            name
-            description
-          }
+
+  // GraphQL query based on the provided category
+  const queries = {
+    Card: gql`
+      query GetCardSet($name: String!) {
+        cardSet(name: $name) {
+          name
+          manaValue
+          type
+          uuid
+          convertedManaCost
+          rarity
         }
-      `;
-      break;
-    case 'Creature':
-      query = gql`
-        query GetCreature($name: String!) {
-          creature(name: $name) {
-            name
-            description
-          }
-        }
-      `;
-      break;
-    case 'Artifact':
-      query = gql`
-        query GetArtifact($name: String!) {
-          artifact(name: $name) {
-            name
-            description
-          }
-        }
-      `;
-      break;
-    case 'Land':
-      query = gql`
-        query GetLand($name: String!) {
-          land(name: $name) {
-            name
-            description
-          }
-        }
-      `;
-      break;
-    case 'Plane':
-      query = gql`
-        query GetPlane($name: String!) {
-          plane(name: $name) {
-            name
-            description
-            locations {
-              name
-              description
-            }
-          }
-        }
-      `;
-      break;
-    case 'Card': // Fetch a card based on the name from CardSet
-    console.log(name)
-      query = gql`
-        query GetCardSet($name: String!) {
-          cardSet(name: $name) {
+      }
+    `,
+    Set: gql`
+      query GetSet($name: String!) {
+        set(name: $name) {
+          name
+          releaseDate
+          baseSetSize
+          totalSetSize
+          type
+          cards {
             name
             manaValue
             type
             uuid
-            convertedManaCost
             rarity
           }
         }
-      `;
-      break;
-    case 'Set': // Fetch a set based on the name
-      console.log(name)
-      query = gql`
-        query GetSet($name: String!) {
-          set(name: $name) {
-            name
-            releaseDate
-            baseSetSize
-            totalSetSize
-            type
-            cards {
-              name
-            manaValue
-            type
-            uuid
-            rarity
-            }
-          }
-        }
-      `;
-      break;
-    default:
-      throw new Error('Invalid category');
-  }
+      }
+    `,
+  };
+
+  // Fetch the corresponding query for the category
+  const query = queries[category];
 
   try {
-    // Use Apollo Client to fetch the data from the GraphQL server
+    // Execute the query using Apollo Client
     const { data } = await client.query({
       query,
       variables: { name: decodedName },
-      fetchPolicy: 'no-cache', // Avoid caching issues
+      fetchPolicy: options.cache ? 'cache-first' : 'no-cache', // Dynamically set cache policy
     });
 
-    // Return the correct data based on category
-    switch (category) {
-      case 'Planeswalker':
-        return data.planeswalker;
-      case 'Creature':
-        return data.creature;
-      case 'Artifact':
-        return data.artifact;
-      case 'Land':
-        return data.land;
-      case 'Plane':
-        return {
-          ...data.plane,
-          locations: data.plane.locations || [] // Ensure locations is an array (empty if no locations)
-        };
-      case 'Card':
-        return data.cardSet; // Card is stored as cardSet in Neo4j
-      case 'Set':
-        return {
-          ...data.set,
-          cards: data.set.cards || [] // Ensure cards is an array (empty if no cards)
-        };
-      default:
-        return null;
+    // Return the appropriate data based on the category
+    return category === 'Card' ? data.cardSet : { ...data.set, cards: data.set.cards || [] };
+
+  } catch (error: unknown) { // Catching an unknown type error
+    // Check if error is an instance of Error
+    if (error instanceof Error) {
+      console.error(`GraphQL error for ${category} with name ${decodedName}:`, error.message);
+      
+      // Handle specific error scenarios
+      if ('networkError' in error) {
+        throw new Error('Network error occurred while fetching data');
+      }
+      if ('graphQLErrors' in error) {
+        throw new Error(`GraphQL errors: ${error.message}`);
+      }
+    } else {
+      // In case the error is not of type Error
+      console.error('Unexpected error:', error);
+      throw new Error('An unexpected error occurred');
     }
-  } catch (error) {
-    console.error(`GraphQL error for ${category} with name ${decodedName}:`, error); // Log the error with category and decoded name
+
     throw new Error('Failed to fetch data');
   }
 };
