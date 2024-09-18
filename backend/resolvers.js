@@ -8,8 +8,8 @@ const runCypherQuery = async (session, query, params = {}) => {
 
 const resolvers = {
   Query: {
+    // Fetch a set by its code
     set: async (_, { code }, { driver }) => {
-      console.log(code);
       const session = driver.session();
       const query = `
         MATCH (s:Set {code: $code})
@@ -33,14 +33,13 @@ const resolvers = {
       }
     },
 
-    // Fetch a card by uuid
+    // Fetch a card by its uuid
     cardSet: async (_, { uuid }, { driver }) => {
       const session = driver.session();
       const query = `
         MATCH (c:CardSet {uuid: $uuid})
         RETURN c.name AS name, c.manaValue AS manaValue, c.uuid AS uuid,
-               c.convertedManaCost AS convertedManaCost, c.rarity AS rarity,
-               c.type AS type
+               c.rarity AS rarity, c.type AS type
       `;
       try {
         const [card] = await runCypherQuery(session, query, { uuid });
@@ -49,8 +48,8 @@ const resolvers = {
         await session.close();
       }
     },
-  
 
+    // Search sets and cards by name
     search: async (_, { searchTerm }, { driver }) => {
       const session = driver.session();
       const query = `
@@ -64,22 +63,16 @@ const resolvers = {
       `;
       try {
         const result = await session.run(query, { searchTerm });
-        const records = result.records.map(record => ({
+        return result.records.map(record => ({
           name: record.get('name'),
           category: record.get('category'),
-          code: record.get('code'),  // Ensure the code is captured for sets
-          uuid: record.get('uuid'),  // Ensure the uuid is captured for card sets
+          code: record.get('code'),  // Ensure code is captured for sets
+          uuid: record.get('uuid'),  // Ensure uuid is captured for card sets
         }));
-    
-        return records.length > 0 ? records : [];
-      } catch (error) {
-        console.error('Error executing search query:', error);
-        return []; // Return an empty array if an error occurs
       } finally {
         await session.close();
       }
     },
-    
   },
 };
 

@@ -7,13 +7,12 @@ export const fetchLore = async (id: string, category: 'Card' | 'Set', options = 
 
   const queries = {
     Card: gql`
-      query GetCardSet($uuid: String!) {
+      query GetCard($uuid: String!) {
         cardSet(uuid: $uuid) {
           name
           manaValue
           type
           uuid
-          convertedManaCost
           rarity
         }
       }
@@ -37,14 +36,11 @@ export const fetchLore = async (id: string, category: 'Card' | 'Set', options = 
     `,
   };
 
-  // Select the appropriate query based on the category
   const query = queries[category];
 
-  // Define variables based on the category ('Card' uses uuid, 'Set' uses code)
-  const variables = category === 'Card' ? { uuid: id } : { code: id };
-
   try {
-    // Execute the query with the correct variables
+    // Only pass uuid for cards and code for sets
+    const variables = category === 'Card' ? { uuid: id } : { code: id }; 
     const { data, errors } = await client.query({
       query,
       variables,
@@ -56,7 +52,6 @@ export const fetchLore = async (id: string, category: 'Card' | 'Set', options = 
       throw new Error(`GraphQL errors: ${errors.map((err) => err.message).join(', ')}`);
     }
 
-    // Return the correct data based on the category
     return category === 'Card' ? data.cardSet : data.set;
   } catch (error) {
     console.error(`GraphQL error for ${category} with ID ${id}:`, error);

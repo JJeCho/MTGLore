@@ -31,6 +31,7 @@ const typeDefs = gql`
     cards: [CardSet!]!
   }
 
+  # SearchResult type for combined set and card search results
   type SearchResult {
     name: String!
     category: String!
@@ -38,14 +39,15 @@ const typeDefs = gql`
     code: String
   }
 
-  # Queries for fetching models
+  # Queries for fetching sets, card sets, and search results
   type Query {
-    # Search by term across sets and cards
+    # Search across sets and cards by term
     search(searchTerm: String!): [SearchResult!]!
-    
+
+    # Fetch a set by its code
     set(code: String!): Set
 
-    # Fetch a card by uuid
+    # Fetch a card by its uuid
     cardSet(uuid: String!): CardSet
   }
 `;
