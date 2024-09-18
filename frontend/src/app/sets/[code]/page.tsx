@@ -13,32 +13,32 @@ type CardSet = {
 
 type SetData = {
   name: string;
-  baseSetSize: number;
   releaseDate: string;
   totalSetSize: number;
   type: string;
   cards: CardSet[];
 };
 
-const SetPage = ({ params }: { params: { name: string } }) => {
-  const { name } = params;
+const SetPage = ({ params }: { params: { code: string } }) => {
+  const { code } = params;
   const router = useRouter(); // Use router for navigation
 
   const [setData, setSetData] = useState<SetData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  console.log(code)
 
-  const decodedName = decodeURIComponent(name);
 
   useEffect(() => {
-    if (!name) {
-      console.log("No name provided, skipping fetch");
+    if (!code) {
+      console.log("No code provided, skipping fetch");
       return;
     }
 
     const fetchSetData = async () => {
       try {
-        const data = await fetchLore(decodedName, 'Set'); // Fetch set data using fetchLore
+        console.log(code)
+        const data = await fetchLore(code, 'Set'); // Fetch set data using fetchLore
         setSetData(data);
       } catch (err) {
         console.error("Error fetching set data:", err);
@@ -49,7 +49,7 @@ const SetPage = ({ params }: { params: { name: string } }) => {
     };
 
     fetchSetData();
-  }, [name, decodedName]);
+  }, [code]);
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;
   if (error) return <div className="text-red-500 text-center mt-10">{error}</div>;
@@ -65,10 +65,8 @@ const SetPage = ({ params }: { params: { name: string } }) => {
       <h1 className="text-3xl font-bold text-center mb-6">{setData.name}</h1>
 
       <div className="bg-gray-100 p-6 rounded-lg shadow-md mb-8">
-        <p className="text-lg"><span className="font-semibold">Base Set Size:</span> {setData.baseSetSize}</p>
         <p className="text-lg"><span className="font-semibold">Release Date:</span> {setData.releaseDate}</p>
         <p className="text-lg"><span className="font-semibold">Total Set Size:</span> {setData.totalSetSize}</p>
-        <p className="text-lg"><span className="font-semibold">Type:</span> {setData.type}</p>
       </div>
 
       <h2 className="text-2xl font-semibold mb-4">Cards in Set:</h2>

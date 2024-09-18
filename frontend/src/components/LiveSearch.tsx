@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { gql, useLazyQuery } from '@apollo/client';
 
-// Define the GraphQL query for searching
+// Define the updated GraphQL query for searching
 const SEARCH_QUERY = gql`
   query Search($searchTerm: String!) {
     search(searchTerm: $searchTerm) {
       name
       category
+      uuid
+      code
     }
   }
 `;
@@ -16,9 +18,11 @@ const SEARCH_QUERY = gql`
 type SearchResult = {
   name: string;
   category: string;
+  uuid?: string;  // Add optional uuid for cards
+  code?: string;  // Add optional code for sets
 };
 
-const LiveSearch = ({ onResultClick }: { onResultClick: (category: string, name: string) => void }) => {
+const LiveSearch = ({ onResultClick }: { onResultClick: (category: string, id: string) => void }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
@@ -49,6 +53,15 @@ const LiveSearch = ({ onResultClick }: { onResultClick: (category: string, name:
     }
   }, [data]);
 
+  // Determine the id to send based on the category (uuid for Card, code for Set)
+  const handleResultClick = (result: SearchResult) => {
+    const id = result.category === 'Card' ? result.uuid : result.code;
+    if (id) {
+      onResultClick(result.category, id); // Pass the id (uuid or code) to onResultClick
+    }
+    console.log(result);
+  };
+
   return (
     <div className="w-full max-w-md mx-auto mt-6">
       <input
@@ -67,7 +80,7 @@ const LiveSearch = ({ onResultClick }: { onResultClick: (category: string, name:
           {searchResults.map((result, index) => (
             <li key={index} className="p-4 hover:bg-blue-50 transition duration-150">
               <button
-                onClick={() => onResultClick(result.category, result.name)}
+                onClick={() => handleResultClick(result)}
                 className="text-blue-600 hover:text-blue-800 font-medium"
               >
                 {result.name} <span className="text-gray-500">({result.category})</span>

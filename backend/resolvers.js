@@ -8,112 +8,69 @@ const runCypherQuery = async (session, query, params = {}) => {
 
 const resolvers = {
   Query: {
-    // Fetch all sets with optional pagination
-    sets: async (_, { limit = 10, offset = 0 }, { driver }) => {
+    set: async (_, { code }, { driver }) => {
+      console.log(code);
       const session = driver.session();
       const query = `
-        MATCH (s:Set)
-        RETURN s.name AS name, s.baseSetSize AS baseSetSize, s.releaseDate AS releaseDate,
-               s.totalSetSize AS totalSetSize, s.type AS type, s.code AS code
-        SKIP $offset
-        LIMIT $limit
-      `;
-      try {
-        const result = await runCypherQuery(session, query, { offset, limit });
-        return result.map(
-          ({ name, baseSetSize, releaseDate, totalSetSize, type, code }) => ({
-            name,
-            baseSetSize,
-            releaseDate,
-            totalSetSize,
-            type,
-            code,
-            cards: [],
-          })
-        );
-      } finally {
-        await session.close();
-      }
-    },
-
-    // Fetch a single set by name, including its cards
-    set: async (_, { name }, { driver }) => {
-      const session = driver.session();
-      const query = `
-        MATCH (s:Set {name: $name})
+        MATCH (s:Set {code: $code})
         OPTIONAL MATCH (c:CardSet)-[:BELONGS_TO]->(s)
-        WHERE c.name IS NOT NULL
         RETURN s.name AS name, 
-               s.baseSetSize AS baseSetSize, 
                s.releaseDate AS releaseDate, 
                s.totalSetSize AS totalSetSize, 
-               s.type AS type,
                collect({
                  uuid: c.uuid,
                  name: c.name,
                  manaValue: c.manaValue,
                  rarity: c.rarity,
-                 type: c.type,
-                 colors: c.colors,
-                 power: c.power,
-                 toughness: c.toughness
+                 type: c.type
                }) AS cards
       `;
       try {
-        const [record] = await runCypherQuery(session, query, { name });
-        if (record) {
-          const { name, baseSetSize, releaseDate, totalSetSize, type, cards } = record;
-          return {
-            name,
-            baseSetSize,
-            releaseDate,
-            totalSetSize,
-            type,
-            cards,
-          };
-        } else {
-          return null;
-        }
+        const [record] = await runCypherQuery(session, query, { code });
+        return record || null;
       } finally {
         await session.close();
       }
     },
 
-    // Fetch a card by name
-    cardSet: async (_, { name }, { driver }) => {
+    // Fetch a card by uuid
+    cardSet: async (_, { uuid }, { driver }) => {
       const session = driver.session();
       const query = `
-        MATCH (c:CardSet {name: $name})
+        MATCH (c:CardSet {uuid: $uuid})
         RETURN c.name AS name, c.manaValue AS manaValue, c.uuid AS uuid,
                c.convertedManaCost AS convertedManaCost, c.rarity AS rarity,
-               c.type AS type, c.colors AS colors, c.power AS power, c.toughness AS toughness
+               c.type AS type
       `;
       try {
-        const [card] = await runCypherQuery(session, query, { name });
+        const [card] = await runCypherQuery(session, query, { uuid });
         return card || null;
       } finally {
         await session.close();
       }
     },
+  
+
     search: async (_, { searchTerm }, { driver }) => {
       const session = driver.session();
       const query = `
         MATCH (s:Set)
         WHERE toLower(s.name) CONTAINS toLower($searchTerm)
-        RETURN s.name AS name, 'Set' AS category
+        RETURN s.name AS name, 'Set' AS category, s.code AS code, null AS uuid
         UNION ALL
         MATCH (cs:CardSet)
         WHERE toLower(cs.name) CONTAINS toLower($searchTerm)
-        RETURN cs.name AS name, 'Card' AS category
+        RETURN cs.name AS name, 'Card' AS category, null AS code, cs.uuid AS uuid
       `;
       try {
         const result = await session.run(query, { searchTerm });
         const records = result.records.map(record => ({
           name: record.get('name'),
           category: record.get('category'),
+          code: record.get('code'),  // Ensure the code is captured for sets
+          uuid: record.get('uuid'),  // Ensure the uuid is captured for card sets
         }));
-
-        // Ensure that we return an empty array if no results were found
+    
         return records.length > 0 ? records : [];
       } catch (error) {
         console.error('Error executing search query:', error);
@@ -122,6 +79,7 @@ const resolvers = {
         await session.close();
       }
     },
+    
   },
 };
 

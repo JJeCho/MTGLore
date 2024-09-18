@@ -6,20 +6,20 @@ import LiveSearch from '@/components/LiveSearch';  // Adjust the import path if 
 const HomePage = () => {
   const router = useRouter();
 
-  const handleNavigate = (category: string, name: string) => {
-    let routePath = `/lore/${category}/${name}`; // Default route
+  // Update the handleNavigate function to use uuid for Card and code for Set
+  const handleNavigate = (category: string, id: string) => {
+    let routePath = `/lore/${category}/${id}`; // Default route
 
     // Modify the route path based on the category
     switch (category) {
       case 'Set':
-        routePath = `/sets/${name}`; // Route for sets
+        routePath = `/sets/${id}`; // Route for sets using code
         break;
       case 'Card':
-        routePath = `/cards/${name}`; // Route for cards
+        routePath = `/cards/${id}`; // Route for cards using uuid
         break;
       // Add other specific categories if needed
       default:
-        // Keep the default route for other categories like Planeswalkers, Creatures, etc.
         break;
     }
 
