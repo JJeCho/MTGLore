@@ -39,6 +39,11 @@ const typeDefs = gql`
     cards: [CardSet!]!
   }
 
+  type Color {
+    name: String!
+    cards: [CardSet!]!
+  }
+
   # SearchResult type for combined set, card, and artist search results
   type SearchResult {
     name: String!
@@ -54,6 +59,9 @@ const typeDefs = gql`
 
     # Search for artists by name
     artist(name: String!): Artist
+
+    # Fetch a color by its name
+    color(name: String!, skip: Int = 0, limit: Int = 10): Color
 
     # Fetch a set by its code
     set(code: String!): Set

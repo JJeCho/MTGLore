@@ -85,8 +85,11 @@ const SetPage = ({ params }: { params: { code: string } }) => {
               <p className="text-gray-700">Rarity: {card.rarity ?? 'Unknown rarity'}</p>
               <p className="text-gray-700">Mana Value: {card.manaValue !== null ? card.manaValue : 'N/A'}</p>
 
-              {card.colors && card.colors.length > 0 && (
+              {card.colors && card.colors.length > 0 ? (
                 <p className="text-gray-700">Colors: {card.colors}</p>
+              )
+              : (
+                <p className="text-gray-700">Colors: Colorless</p>
               )}
 
               {card.artist && (
