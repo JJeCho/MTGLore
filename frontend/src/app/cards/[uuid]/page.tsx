@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { fetchLore } from "@/lib/api"; // Adjust the path if necessary
 
 type Card = {
@@ -9,19 +10,19 @@ type Card = {
   convertedManaCost: number | null;
   rarity: string | null;
   type: string | null;
-  colors: string[] | null; // Colors are objects with a "name" field
+  colors: string[] | null;
   power: string | null;
   toughness: string | null;
   flavorText: string | null;
-  artist: string | null; // Artist is an object with a "name" field
+  artist: string | null;
   hasFoil: boolean | null;
   hasNonFoil: boolean | null;
   borderColor: string | null;
   frameVersion: string | null;
   originalText: string | null;
-  keywords: string[] | null; // Keywords are objects with a "name" field
-  subtypes: string[] | null; // Subtypes are objects with a "name" field
-  supertypes: string[] | null; // Supertypes are objects with a "name" field
+  keywords: string[] | null;
+  subtypes: string[] | null;
+  supertypes: string[] | null;
 };
 
 const CardPage = ({ params }: { params: { uuid: string } }) => {
@@ -30,6 +31,7 @@ const CardPage = ({ params }: { params: { uuid: string } }) => {
   const [error, setError] = useState<string | null>(null);
 
   const { uuid } = params;
+  const router = useRouter(); // Initialize the router
 
   useEffect(() => {
     const getCardData = async () => {
@@ -98,17 +100,23 @@ const CardPage = ({ params }: { params: { uuid: string } }) => {
           {card.colors && card.colors.length > 0 && (
             <div className="flex flex-col md:col-span-2">
               <p className="text-lg font-semibold text-gray-800">Colors:</p>
-              <p className="text-gray-700">{card.colors}</p>
+              <p className="text-gray-700">{card.colors.join(", ")}</p>
             </div>
           )}
 
           {card.artist && (
-            <div className="flex flex-col md:col-span-2">
+            <div
+              className="flex flex-col md:col-span-2 cursor-pointer"
+              onClick={() =>
+                router.push(`/artists/${encodeURIComponent(card.artist!)}`)
+              }
+            >
               <p className="text-lg font-semibold text-gray-800">Artist:</p>
-              <p className="text-gray-700">{card.artist}</p>
+              <p className="text-blue-600 hover:underline">{card.artist}</p>
             </div>
           )}
-          {card?.flavorText && (
+
+          {card.flavorText && (
             <div className="flex flex-col md:col-span-2">
               <p className="text-lg font-semibold text-gray-800">
                 Flavor Text:
@@ -117,12 +125,12 @@ const CardPage = ({ params }: { params: { uuid: string } }) => {
             </div>
           )}
 
-          {card?.originalText && (
+          {card.originalText && (
             <div className="flex flex-col md:col-span-2">
               <p className="text-lg font-semibold text-gray-800">
                 Original Text:
               </p>
-              <p className="text-gray-700">{`"${card.originalText}"`}</p>
+              <p className="text-gray-700">{card.originalText}</p>
             </div>
           )}
 
@@ -157,21 +165,21 @@ const CardPage = ({ params }: { params: { uuid: string } }) => {
           {card.subtypes && card.subtypes.length > 0 && (
             <div className="flex flex-col md:col-span-2">
               <p className="text-lg font-semibold text-gray-800">Subtypes:</p>
-              <p className="text-gray-700">{card.subtypes.join(" ")}</p>
+              <p className="text-gray-700">{card.subtypes.join(", ")}</p>
             </div>
           )}
 
           {card.supertypes && card.supertypes.length > 0 && (
             <div className="flex flex-col md:col-span-2">
               <p className="text-lg font-semibold text-gray-800">Supertypes:</p>
-              <p className="text-gray-700">{card.supertypes.join(" ")}</p>
+              <p className="text-gray-700">{card.supertypes.join(", ")}</p>
             </div>
           )}
 
           {card.keywords && card.keywords.length > 0 && (
             <div className="flex flex-col md:col-span-2">
               <p className="text-lg font-semibold text-gray-800">Keywords:</p>
-              <p className="text-gray-700">{card.keywords.join(" ")}</p>
+              <p className="text-gray-700">{card.keywords.join(", ")}</p>
             </div>
           )}
         </div>
