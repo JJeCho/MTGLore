@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 import client from './apolloClient';
+
 export const fetchLore = async (id: string, category: 'Card' | 'Set', options = { cache: false }) => {
   if (!id || !category) {
     throw new Error('ID and category must be provided');
@@ -11,9 +12,21 @@ export const fetchLore = async (id: string, category: 'Card' | 'Set', options = 
         cardSet(uuid: $uuid) {
           name
           manaValue
-          type
-          uuid
           rarity
+          type
+          colors  # Fetch the array of strings directly, no subfields
+          power
+          toughness
+          flavorText
+          artist  # Fetch the string directly, no subfields
+          hasFoil
+          hasNonFoil
+          borderColor
+          frameVersion
+          originalText
+          keywords # Add keywords as an array of names
+          subtypes # Add subtypes as an array of names
+          supertypes # Add supertypes as an array of names
         }
       }
     `,
@@ -25,11 +38,16 @@ export const fetchLore = async (id: string, category: 'Card' | 'Set', options = 
           totalSetSize
           type
           cards {
+            uuid
             name
             manaValue
-            type
-            uuid
             rarity
+            type
+            colors  # Fetch the array of strings directly, no subfields
+            artist  # Fetch the string directly, no subfields
+            keywords # Add keywords for each card
+            subtypes # Add subtypes for each card
+            supertypes # Add supertypes for each card
           }
         }
       }
@@ -39,8 +57,8 @@ export const fetchLore = async (id: string, category: 'Card' | 'Set', options = 
   const query = queries[category];
 
   try {
-    // Only pass uuid for cards and code for sets
-    const variables = category === 'Card' ? { uuid: id } : { code: id }; 
+    const variables = category === 'Card' ? { uuid: id } : { code: id };
+    console.log('Sending GraphQL request with variables:', variables);
     const { data, errors } = await client.query({
       query,
       variables,
@@ -56,6 +74,7 @@ export const fetchLore = async (id: string, category: 'Card' | 'Set', options = 
   } catch (error) {
     console.error(`GraphQL error for ${category} with ID ${id}:`, error);
     if (error.networkError) {
+      console.error('Network error details:', error.networkError);
       throw new Error('Network error occurred while fetching data');
     } else {
       throw new Error(`Failed to fetch ${category}`);

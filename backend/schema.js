@@ -1,7 +1,6 @@
 const { gql } = require('apollo-server-express');
 
 const typeDefs = gql`
-
   # CardSet type (individual cards)
   type CardSet {
     name: String!
@@ -14,23 +13,26 @@ const typeDefs = gql`
     power: String
     toughness: String
     flavorText: String
-    artist: String
+    artist: String  # Artist can be nullable
     hasFoil: Boolean
     hasNonFoil: Boolean
     borderColor: String
     frameVersion: String
     originalText: String
+    keywords: [String]
+    subtypes: [String]
+    supertypes: [String]
   }
 
   # Set type (a collection of CardSets)
   type Set {
-    name: String!
-    releaseDate: String!
-    totalSetSize: Int!
-    code: String!
-    cards: [CardSet!]!
+    name: String
+    releaseDate: String
+    totalSetSize: Int
+    type: String
+    cards: [CardSet]
   }
-
+    
   # SearchResult type for combined set and card search results
   type SearchResult {
     name: String!

@@ -55,12 +55,17 @@ const LiveSearch = ({ onResultClick }: { onResultClick: (category: string, id: s
 
   // Determine the id to send based on the category (uuid for Card, code for Set)
   const handleResultClick = (result: SearchResult) => {
-    const id = result.category === 'Card' ? result.uuid : result.code;
+    // Use `code` for sets and `uuid` for cards
+    const id = result.category === 'Set' ? result.code : result.uuid;
+    
     if (id) {
-      onResultClick(result.category, id); // Pass the id (uuid or code) to onResultClick
+      // Pass the correct identifier (code for Set, uuid for Card)
+      onResultClick(result.category, id);
+    } else {
+      console.error(`No valid ID found for ${result.category}:`, result);
     }
-    console.log(result);
   };
+  
 
   return (
     <div className="w-full max-w-md mx-auto mt-6">
