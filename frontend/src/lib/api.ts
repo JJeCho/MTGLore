@@ -1,9 +1,17 @@
-import { gql } from '@apollo/client';
-import client from './apolloClient';
+import { gql } from "@apollo/client";
+import client from "./apolloClient";
 
-export const fetchLore = async (id: string, category: 'Card' | 'Set', options = { cache: false }) => {
+interface NetworkError extends Error {
+  networkError?: unknown;
+}
+
+export const fetchLore = async (
+  id: string,
+  category: "Card" | "Set" | "Artist",
+  options = { cache: false }
+) => {
   if (!id || !category) {
-    throw new Error('ID and category must be provided');
+    throw new Error("ID and category must be provided");
   }
 
   const queries = {
@@ -14,11 +22,11 @@ export const fetchLore = async (id: string, category: 'Card' | 'Set', options = 
           manaValue
           rarity
           type
-          colors  # Fetch the array of strings directly, no subfields
+          colors # Fetch the array of strings directly, no subfields
           power
           toughness
           flavorText
-          artist  # Fetch the string directly, no subfields
+          artist # Fetch the string directly, no subfields
           hasFoil
           hasNonFoil
           borderColor
@@ -43,8 +51,8 @@ export const fetchLore = async (id: string, category: 'Card' | 'Set', options = 
             manaValue
             rarity
             type
-            colors  # Fetch the array of strings directly, no subfields
-            artist  # Fetch the string directly, no subfields
+            colors # Fetch the array of strings directly, no subfields
+            artist # Fetch the string directly, no subfields
             keywords # Add keywords for each card
             subtypes # Add subtypes for each card
             supertypes # Add supertypes for each card
@@ -52,32 +60,78 @@ export const fetchLore = async (id: string, category: 'Card' | 'Set', options = 
         }
       }
     `,
+    Artist: gql`
+      query GetArtist($name: String!) {
+      artist(name: $name) {
+        name
+        cards {
+          uuid
+          name
+          manaValue
+          rarity
+          type
+          colors
+          artist
+        }
+      }
+    }
+    `,
   };
 
   const query = queries[category];
 
   try {
-    const variables = category === 'Card' ? { uuid: id } : { code: id };
-    console.log('Sending GraphQL request with variables:', variables);
+    const variables =
+      category === "Card"
+        ? { uuid: id }
+        : category === "Set"
+        ? { code: id }
+        : { name: id };
+
+    console.log("Sending GraphQL request with variables:", variables);
+
     const { data, errors } = await client.query({
       query,
       variables,
-      fetchPolicy: options.cache ? 'cache-first' : 'no-cache',
+      fetchPolicy: options.cache ? "cache-first" : "no-cache",
     });
 
     if (errors) {
-      console.error('GraphQL errors:', errors);
-      throw new Error(`GraphQL errors: ${errors.map((err) => err.message).join(', ')}`);
+      console.error("GraphQL errors:", errors);
+      throw new Error(
+        `GraphQL errors: ${errors.map((err) => err.message).join(", ")}`
+      );
     }
 
-    return category === 'Card' ? data.cardSet : data.set;
-  } catch (error) {
-    console.error(`GraphQL error for ${category} with ID ${id}:`, error);
-    if (error.networkError) {
-      console.error('Network error details:', error.networkError);
-      throw new Error('Network error occurred while fetching data');
+    // Return data based on the category
+    console.log(data)
+    if (category === "Card") {
+      return data.cardSet;
+    } else if (category === "Set") {
+      return data.set;
+    } else if (category === "Artist") {
+      return data.artist;
+    }
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(
+        `GraphQL error for ${category} with ID ${id}:`,
+        error.message
+      );
+
+      // Check if the error has a networkError property
+      if ((error as NetworkError).networkError) {
+        console.error(
+          "Network error details:",
+          (error as NetworkError).networkError
+        );
+        throw new Error("Network error occurred while fetching data");
+      } else {
+        throw new Error(`Failed to fetch ${category}: ${error.message}`);
+      }
     } else {
-      throw new Error(`Failed to fetch ${category}`);
+      // Handle the case where error is not an instance of Error
+      throw new Error(`Unknown error occurred while fetching ${category}`);
     }
   }
 };

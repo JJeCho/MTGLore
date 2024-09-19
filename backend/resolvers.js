@@ -94,6 +94,53 @@ const resolvers = {
         await session.close();
       }
     },
+    artist: async (_, { name }, { driver }) => {
+      if (!driver) {
+        throw new Error('Neo4j driver not initialized');
+      }
+
+      const session = driver.session({ defaultAccessMode: neo4j.session.READ });
+
+      // Updated query to avoid nested aggregate functions
+      const query = `
+        MATCH (a:Artist {name: $name})-[:HAS_ARTIST]-(c:CardSet)
+        OPTIONAL MATCH (c)-[:HAS_COLOR]->(co:Color)
+        WITH a, c, collect(DISTINCT co.name) AS colors
+        RETURN a.name AS name, 
+               collect({
+                 uuid: c.uuid,
+                 name: c.name,
+                 manaValue: c.manaValue,
+                 rarity: c.rarity,
+                 type: c.type,
+                 colors: colors,
+                 artist: a.name
+               }) AS cards
+      `;
+
+      try {
+        const result = await session.run(query, { name });
+
+        if (!result.records.length) {
+          throw new Error(`No artist found with name "${name}"`);
+        }
+
+        const record = result.records[0];
+        
+        return {
+          name: record.get('name'),
+          cards: record.get('cards')
+        };
+      } catch (error) {
+        console.error('Error searching for artist:', error.message);
+        throw new Error(`Error searching for artist: ${error.message}`);
+      } finally {
+        await session.close();
+      }
+    },
+
+
+    
 
     // Search sets and cards by name
     search: async (_, { searchTerm }, { driver }) => {
@@ -110,6 +157,10 @@ const resolvers = {
         MATCH (cs:CardSet)
         WHERE toLower(cs.name) CONTAINS toLower($searchTerm)
         RETURN cs.name AS name, 'Card' AS category, null AS code, cs.uuid AS uuid
+        UNION ALL
+        MATCH (a:Artist)-[:HAS_ARTIST]-(c:CardSet)
+        WHERE toLower(a.name) CONTAINS toLower($searchTerm)
+        RETURN a.name AS name, 'Artist' AS category, null AS code, c.uuid AS uuid
       `;
       try {
         const result = await session.run(query, { searchTerm });
@@ -117,12 +168,12 @@ const resolvers = {
         return result.records.map(record => ({
           name: record.get('name'),
           category: record.get('category'),
-          code: record.get('code') || null,  // Ensure code is captured for sets
-          uuid: record.get('uuid') || null,  // Ensure uuid is captured for card sets
+          code: record.get('code') || null,
+          uuid: record.get('uuid') || null,
         })) || [];
       } catch (error) {
-        console.error('Error searching sets and cards:', error.message);
-        throw new Error(`Error searching sets and cards: ${error.message}`);
+        console.error('Error searching sets, cards, and artists:', error.message);
+        throw new Error(`Error searching sets, cards, and artists: ${error.message}`);
       } finally {
         await session.close();
       }

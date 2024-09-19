@@ -18,6 +18,9 @@ const HomePage = () => {
       case 'Card':
         routePath = `/cards/${id}`; // Route for cards using uuid
         break;
+      case 'Artist':
+        routePath = `/artists/${id}`; // Route for artists using name
+        break;
       // Add other specific categories if needed
       default:
         break;

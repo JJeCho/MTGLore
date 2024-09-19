@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import { gql, useLazyQuery } from '@apollo/client';
 
-// Define the updated GraphQL query for searching
+// Define the updated GraphQL query for searching (includes Artist category)
 const SEARCH_QUERY = gql`
   query Search($searchTerm: String!) {
     search(searchTerm: $searchTerm) {
       name
       category
-      uuid
-      code
+      uuid     # Optional for cards
+      code     # Optional for sets
     }
   }
 `;
@@ -53,19 +53,18 @@ const LiveSearch = ({ onResultClick }: { onResultClick: (category: string, id: s
     }
   }, [data]);
 
-  // Determine the id to send based on the category (uuid for Card, code for Set)
+  // Determine the id to send based on the category (uuid for Card, code for Set, name for Artist)
   const handleResultClick = (result: SearchResult) => {
-    // Use `code` for sets and `uuid` for cards
-    const id = result.category === 'Set' ? result.code : result.uuid;
-    
+    // Use `code` for sets, `uuid` for cards, and `name` for artists
+    const id = result.category === 'Set' ? result.code : result.category === 'Card' ? result.uuid : result.name;
+
     if (id) {
-      // Pass the correct identifier (code for Set, uuid for Card)
+      // Pass the correct identifier (code for Set, uuid for Card, name for Artist)
       onResultClick(result.category, id);
     } else {
       console.error(`No valid ID found for ${result.category}:`, result);
     }
   };
-  
 
   return (
     <div className="w-full max-w-md mx-auto mt-6">
@@ -73,7 +72,7 @@ const LiveSearch = ({ onResultClick }: { onResultClick: (category: string, id: s
         type="text"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Search for Planeswalkers, Creatures, Sets, Cards, etc."
+        placeholder="Search for Planeswalkers, Creatures, Sets, Cards, Artists, etc."
         className="border border-gray-300 w-full p-3 rounded-lg shadow-sm focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition duration-200"
       />
 

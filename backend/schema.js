@@ -32,8 +32,14 @@ const typeDefs = gql`
     type: String
     cards: [CardSet]
   }
-    
-  # SearchResult type for combined set and card search results
+
+  # Artist type
+  type Artist {
+    name: String!
+    cards: [CardSet!]!
+  }
+
+  # SearchResult type for combined set, card, and artist search results
   type SearchResult {
     name: String!
     category: String!
@@ -41,10 +47,13 @@ const typeDefs = gql`
     code: String
   }
 
-  # Queries for fetching sets, card sets, and search results
+  # Queries for fetching sets, card sets, artists, and search results
   type Query {
-    # Search across sets and cards by term
+    # Search across sets, cards, and artists by term
     search(searchTerm: String!): [SearchResult!]!
+
+    # Search for artists by name
+    artist(name: String!): Artist
 
     # Fetch a set by its code
     set(code: String!): Set
