@@ -21,7 +21,7 @@
   + Handle errors for empty or invalid searches (e.g., "No cards found for this artist").
   
 - **Testing:**
-  - Write unit tests for the GraphQL query to ensure correct retrieval of cards by artist.
+  + Write unit tests for the GraphQL query to ensure correct retrieval of cards by artist.
   - Test the UI for searching and displaying artist-related cards.
   - Validate the performance of artist search queries with various artist names.
 
