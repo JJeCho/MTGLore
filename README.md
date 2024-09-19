@@ -1,77 +1,93 @@
 
 # Card Relations Explorer
 
-This project is a full-stack application created to explore the relationships between Magic: The Gathering cards using a graph database. The goal of the project is to provide users with a utility that allows them to search, visualize, and explore card sets, their relations, and various metadata such as mana cost, rarity, and more.
+Card Relations Explorer is a full-stack application designed for exploring the intricate relationships between Magic: The Gathering cards using a graph database. It enables users to search, visualize, and explore card sets, card metadata, and inter-card relations, such as mana cost, rarity, and more.
 
 ## Purpose
 
-This project was created for three main purposes:
+The project serves three key purposes:
 
-1. **Understanding Graph Databases**: Gain a deeper understanding of graph databases, graph query languages (like Cypher for Neo4j), and methods for optimizing queries, such as using indexing, pagination, and caching.
+1. **Graph Databases**: Develop a deeper understanding of graph databases (Neo4j) and how to query them using Cypher and GraphQL. It also includes optimization techniques such as indexing, pagination, and caching.
    
-2. **Data Visualization**: Practice techniques for visualizing relationships between data in a large dataset. This allows users to see how individual entities are connected within the graph, as well as interact with the data visually.
+2. **Data Visualization**: Provide an interactive platform to visualize relationships between large datasets, particularly for Magic: The Gathering card sets and their associated metadata.
 
-3. **Utility for Magic: The Gathering Enthusiasts**: Build a tool that allows users to explore card relations for various use cases such as creating tribal decks, finding cards by a favorite artist, or diving deeper into Magic: The Gathering lore.
+3. **MTG Enthusiasts Tool**: This project acts as a utility for Magic: The Gathering players and enthusiasts. Users can explore card relations, create tribal decks, find cards by a favorite artist, and dive deeper into Magic: The Gathering lore.
 
 ## Tech Stack
 
-- **Frontend**: Built with [Next.js](https://nextjs.org/), a React-based framework for server-side rendering and static site generation.
-- **Backend**: Built with [Node.js](https://nodejs.org/) and [Apollo Server](https://www.apollographql.com/docs/apollo-server/), providing a GraphQL API for querying the data.
-- **Database**: [Neo4j](https://neo4j.com/), a graph database designed for handling complex relationships between data points.
+- **Frontend**: Built using [Next.js](https://nextjs.org/), a React-based framework for server-side rendering and static site generation.
+- **Backend**: Powered by [Node.js](https://nodejs.org/) and [Apollo Server](https://www.apollographql.com/docs/apollo-server/) for handling GraphQL requests.
+- **Database**: The application uses [Neo4j](https://neo4j.com/), a graph database optimized for relationship-based data.
+
 
 ## Features
 
-- **GraphQL API**: The backend exposes a GraphQL API that allows querying the Neo4j database for sets, cards, and relations between cards.
-- **Card Search**: Users can search for cards, card sets, and related data using a live search feature.
-- **Card Exploration**: Users can click on cards or sets to explore deeper relationships, such as finding other cards that belong to a set or related cards by artist, type, or mana cost.
-- **Data Visualization**: Card data is presented visually, allowing users to explore relations in an intuitive and interactive manner.
+- **GraphQL API**: A fully-functional GraphQL API is provided for querying the Neo4j database to retrieve card and set data.
+- **Card Search & Exploration**: Users can search for cards and sets, and visualize the relationships between cards, sets, artists, mana costs, and other attributes.
+- **Rich Metadata**: Users can explore deeper card attributes such as mana cost, rarity, power, toughness, card colors, and flavor texts.
 
-## Key Functionality
+## Installation and Setup
 
-- **Set Search**: Search for sets by name, and view detailed information about the set, including release date, base set size, total set size, and the cards it contains.
-- **Card Search**: Explore individual cards by searching by name. View detailed information like mana value, type, rarity, and power/toughness (if applicable).
-- **Card Relationships**: Visualize relationships between cards in terms of set membership and other attributes like artist, mana cost, or card type.
-- **GraphQL Queries**: Efficiently fetch large datasets while optimizing performance with pagination and indexing techniques.
-- **Server-Side Rendering**: Uses Next.js to handle server-side rendering for faster load times and better SEO.
-  
-## Installation
+### Prerequisites
 
-1. **Clone the Repository**:
+Ensure you have the following installed:
+- [Node.js](https://nodejs.org/en/download/)
+- [Neo4j](https://neo4j.com/download/) (either local installation or cloud service)
+
+## JSON Reader for Graph Database Seeding
+
+The project hosted at [JSON Reader](https://github.com/JJeCho/jsonReader) was developed to streamline the process of seeding the graph database (Neo4j) used in this application. It focuses on parsing and processing large JSON datasets to convert them into a format that can be ingested by the graph database.
+
+### Key Features:
+- **Efficient Parsing**: Handles large JSON files efficiently, preparing data for seamless import into the Neo4j database.
+- **Data Transformation**: Automatically converts JSON data into nodes and relationships that correspond to Magic: The Gathering cards, sets, and their respective relations.
+- **Neo4j Integration**: Outputs Cypher queries and structured data specifically designed for Neo4j, ensuring the accurate creation of graph relationships.
+
+This tool is integral to the data pipeline for populating the Card Relations Explorer application with real-world Magic: The Gathering data, ensuring the database is seeded with rich, interconnected data points.
+
+
+### Steps to Run
+
+1. Clone this repository:
    ```bash
-   git clone https://github.com/your-username/card-relations-explorer.git
+   git clone https://github.com/your-repo/card-relations-explorer.git
    cd card-relations-explorer
    ```
 
-2. **Install Dependencies**:
+2. Install dependencies for both frontend and backend:
    ```bash
+   cd frontend
+   npm install
+   cd ../backend
    npm install
    ```
 
-3. **Set Up Neo4j Database**:
-   - Download and install Neo4j locally or use the Neo4j cloud services.
-   - Set up your database and create a `.env` file in the root of your project with the following environment variables:
-     ```
+3. Set up the Neo4j database:
+   - Download and install Neo4j.
+   - Set up your database and add environment variables in `.env` in the `backend` directory:
+     ```bash
      NEO4J_URI=bolt://localhost:7687
      NEO4J_USER=neo4j
      NEO4J_PASSWORD=yourpassword
      ```
 
-4. **Run the Application**:
+4. Follow all installation instructions at [JSON Reader](https://github.com/JJeCho/jsonReader) and seed the database using the `AllPrintings.json` file from the [MTGJSON website](https://mtgjson.com/downloads/all-files/#allprintings)
+
+5. Start the application:
    ```bash
    npm run dev
    ```
 
-   This will start both the Next.js frontend and the Node.js backend.
+This command will start both the Next.js frontend and the Node.js backend.
 
 ## GraphQL API Endpoints
 
-Here are some of the main GraphQL queries you can use to explore the data:
+Some key queries to explore card relations are:
 
-### Fetch Sets
-
+### Get All Sets
 ```graphql
-query GetSets($limit: Int, $offset: Int) {
-  sets(limit: $limit, offset: $offset) {
+query GetAllSets {
+  sets {
     name
     baseSetSize
     releaseDate
@@ -87,10 +103,9 @@ query GetSets($limit: Int, $offset: Int) {
 }
 ```
 
-### Fetch a Single Set by Name
-
+### Get a Single Set by Name
 ```graphql
-query GetSet($name: String!) {
+query GetSetByName($name: String!) {
   set(name: $name) {
     name
     baseSetSize
@@ -102,16 +117,18 @@ query GetSet($name: String!) {
       manaValue
       type
       rarity
+      colors
+      power
+      toughness
     }
   }
 }
 ```
 
-### Fetch a Card by Name
-
+### Get Card by Name
 ```graphql
-query GetCardSet($name: String!) {
-  cardSet(name: $name) {
+query GetCardByName($name: String!) {
+  card(name: $name) {
     name
     manaValue
     type
@@ -125,11 +142,12 @@ query GetCardSet($name: String!) {
 
 ## Future Features
 
-- **Deck Builder**: Allow users to build and save custom decks by dragging and dropping cards.
-- **Lore Exploration**: Dive deeper into Magic: The Gathering lore by exploring card flavor texts, set themes, and other related details.
-- **Advanced Filtering**: Enable more sophisticated filters to search for cards by specific attributes like mana cost, card type, or artist.
-- **Use of AI for Card Art Scanning**: Leverage AI technology to extract information from card artworks to form links and relations between cards
+- **Deck Builder**: Allow users to build and save custom decks.
+- **Lore Exploration**: Delve deeper into Magic: The Gathering lore through card flavor texts and set themes.
+- **Advanced Filtering**: More filters for mana cost, card type, artist, etc.
+- **AI-Assisted Card Art Scanning**: AI-powered extraction of information from card artworks to generate further relations.
 
 ## Contributions
 
-Contributions are welcome! Feel free to submit a pull request or open an issue if you encounter any bugs or have feature requests.
+Contributions are highly encouraged! Feel free to open an issue or submit a pull request with improvements or bug fixes.
+
