@@ -33,6 +33,10 @@ const HomePage = () => {
     router.push(`/colors/${color}`);
   };
 
+  const handleCardsNavigate = () => {
+    router.push(`/cards`);
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 flex flex-col items-center justify-center p-6 md:p-12 lg:p-16">
@@ -77,6 +81,14 @@ const HomePage = () => {
             className="px-4 py-2 bg-green-500 text-white border border-green-300 rounded hover:bg-green-600"
           >
             Green
+          </button>
+        </div>
+        <div className="mt-6 flex justify-center space-x-4">
+          <button
+            onClick={() => handleCardsNavigate()}
+            className="px-4 py-2 bg-white text-black border border-gray-300 rounded hover:bg-gray-100"
+          >
+            All Cards
           </button>
         </div>
 

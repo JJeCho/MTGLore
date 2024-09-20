@@ -10,7 +10,6 @@
   + Extend the Neo4j schema to include an `artist` node and create relationships between card nodes and artists.
   + Create a GraphQL query in Apollo Server to search for artists by name and return associated cards.
   + Modify the existing search query to support artist search by name.
-  - Add indexing on the `artist` property in Neo4j to improve search performance.
   
 - **Frontend:**
   + Update the live search component on the card exploration page to support searching for artists by name.
@@ -32,12 +31,12 @@
 
 #### Tasks:
 - **Backend:**
-  - Extend the schema to include a `color` property on card nodes, supporting multiple colors.
-  - Create a GraphQL query that allows searching cards by color, with support for multi-color filtering.
-  - Add indexing on the `color` property for optimized performance.
+  + Extend the database to include Color nodes that have relationships with card nodes, supporting multiple colors.
+  / Create a GraphQL query that allows searching cards by color, with support for multi-color filtering.
   
 - **Frontend:**
-  - Implement a UI component to navigate to `/colors/[color]` routes and pages.
+  - Implement a UI component to navigate to `/cards/` route and page where users can explore and filter all cards
+  + Implement a UI component to navigate to `/colors/[color]` routes and pages.
   - Connect the UI component to the backend query to filter cards by color(s).
   - Display filtered results with corresponding color indicators.
 

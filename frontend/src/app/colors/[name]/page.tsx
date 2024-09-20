@@ -15,6 +15,7 @@ type Card = {
   power: string | null;
   toughness: string | null;
   flavorText: string | null;
+  code: string | null;
   artist: string | null;
   hasFoil: boolean | null;
   hasNonFoil: boolean | null;
@@ -55,6 +56,10 @@ const ColorsPage = ({ params }: { params: { name: string } }) => {
     }
   };
 
+  const handleCardClick = (uuid: string) => {
+    router.push(`/cards/${uuid}`);
+  }
+
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,11 +92,12 @@ const ColorsPage = ({ params }: { params: { name: string } }) => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
         {colorData.cards.map((card) => (
-          <div key={card.uuid} className="bg-white shadow-md rounded-lg p-4 w-full">
+          <div key={card.uuid} onClick={() => handleCardClick(card.uuid)} className="bg-white shadow-md rounded-lg p-4 w-full">
             <h2 className="text-xl font-semibold mb-2">{card.name}</h2>
             <p className="text-sm"><strong>Mana Value:</strong> {card.manaValue}</p>
             <p className="text-sm"><strong>Rarity:</strong> {card.rarity}</p>
             <p className="text-sm"><strong>Type:</strong> {card.type}</p>
+            <p className="text-sm"><strong>Code:</strong> {card.code}</p>
             <p className="text-sm"><strong>Colors:</strong> {card.colors?.join(', ')}</p>
             <p className="text-sm"><strong>Power:</strong> {card.power}</p>
             <p className="text-sm"><strong>Toughness:</strong> {card.toughness}</p>

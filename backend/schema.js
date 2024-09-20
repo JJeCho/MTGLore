@@ -22,6 +22,7 @@ const typeDefs = gql`
     keywords: [String]
     subtypes: [String]
     supertypes: [String]
+    code: String
   }
 
   # Set type (a collection of CardSets)
@@ -30,6 +31,7 @@ const typeDefs = gql`
     releaseDate: String
     totalSetSize: Int
     type: String
+    code: String
     cards: [CardSet]
   }
 
@@ -68,6 +70,8 @@ const typeDefs = gql`
 
     # Fetch a card by its uuid
     cardSet(uuid: String!): CardSet
+
+    cardSets(skip: Int = 0, limit: Int = 30): [CardSet!]!
   }
 `;
 

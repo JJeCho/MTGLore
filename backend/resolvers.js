@@ -11,11 +11,11 @@ const resolvers = {
     // Fetch a set by its code (including expanded card details like colors and artist)
     set: async (_, { code }, { driver }) => {
       if (!driver) {
-        throw new Error('Neo4j driver not initialized');
+        throw new Error("Neo4j driver not initialized");
       }
 
       const session = driver.session({ defaultAccessMode: neo4j.session.READ });
-      console.log('Set resolver called with code:', code);
+      console.log("Set resolver called with code:", code);
 
       try {
         const query = `
@@ -43,14 +43,14 @@ const resolvers = {
         }
         const record = result.records[0];
         return {
-          name: record.get('name'),
-          releaseDate: record.get('releaseDate'),
-          totalSetSize: record.get('totalSetSize'),
-          type: record.get('type'),
-          cards: record.get('cards'),
+          name: record.get("name"),
+          releaseDate: record.get("releaseDate"),
+          totalSetSize: record.get("totalSetSize"),
+          type: record.get("type"),
+          cards: record.get("cards"),
         };
       } catch (error) {
-        console.error('Error fetching set:', error.message);
+        console.error("Error fetching set:", error.message);
         throw new Error(`Error fetching set: ${error.message}`);
       } finally {
         await session.close();
@@ -60,9 +60,9 @@ const resolvers = {
     // Fetch a card by its uuid (expanded information for cards)
     cardSet: async (_, { uuid }, { driver }) => {
       if (!driver) {
-        throw new Error('Neo4j driver not initialized');
+        throw new Error("Neo4j driver not initialized");
       }
-    
+
       const session = driver.session({ defaultAccessMode: neo4j.session.READ });
       const query = `
         MATCH (c:CardSet {uuid: $uuid})
@@ -93,20 +93,20 @@ const resolvers = {
         const record = result.records[0];
         return record.toObject();
       } catch (error) {
-        console.error('Error fetching cardSet:', error.message);
+        console.error("Error fetching cardSet:", error.message);
         throw new Error(`Error fetching cardSet: ${error.message}`);
       } finally {
         await session.close();
       }
     },
-    
+
     artist: async (_, { name }, { driver }) => {
       if (!driver) {
-        throw new Error('Neo4j driver not initialized');
+        throw new Error("Neo4j driver not initialized");
       }
-    
+
       const session = driver.session({ defaultAccessMode: neo4j.session.READ });
-    
+
       const query = `
         MATCH (a:Artist {name: $name})-[:HAS_ARTIST]-(c:CardSet)
         RETURN a.name AS name, 
@@ -120,38 +120,35 @@ const resolvers = {
                  artist: a.name
                }) AS cards
       `;
-    
+
       try {
         const result = await session.run(query, { name });
-    
+
         if (!result.records.length) {
           throw new Error(`No artist found with name "${name}"`);
         }
-    
+
         const record = result.records[0];
-        
+
         return {
-          name: record.get('name'),
-          cards: record.get('cards')
+          name: record.get("name"),
+          cards: record.get("cards"),
         };
       } catch (error) {
-        console.error('Error searching for artist:', error.message);
+        console.error("Error searching for artist:", error.message);
         throw new Error(`Error searching for artist: ${error.message}`);
       } finally {
         await session.close();
       }
     },
-    
+
     color: async (_, { name, skip = 0, limit = 30 }, { driver }) => {
-      if (!driver) {
-        throw new Error('Neo4j driver not initialized');
-      }
-    
       const session = driver.session({ defaultAccessMode: neo4j.session.READ });
     
       const query = `
         MATCH (c:Color {name: $name})-[:HAS_COLOR]-(card:CardSet)
-        WITH c, card
+        OPTIONAL MATCH (card)-[:BELONGS_TO]->(s:Set)  // Match the set that the card belongs to
+        WITH c, card, s
         ORDER BY card.name
         SKIP $skip
         LIMIT $limit
@@ -163,6 +160,8 @@ const resolvers = {
           type: card.type,
           power: card.power,
           toughness: card.toughness,
+          code: s.code,  // Retrieve the code from the Set node
+          colors: [ (card)-[:HAS_COLOR]->(co:Color) | co.name ],
           keywords: [ (card)-[:HAS_KEYWORD]->(k:Keyword) | k.name ],
           subtypes: [ (card)-[:HAS_SUBTYPE]->(st:Subtype) | st.name ],
           supertypes: [ (card)-[:HAS_SUPERTYPE]->(su:Supertype) | su.name ]
@@ -183,25 +182,88 @@ const resolvers = {
         const record = result.records[0];
     
         return {
-          name: record.get('name'),
-          cards: record.get('cards'),
+          name: record.get("name"),
+          cards: record.get("cards"),
         };
       } catch (error) {
-        console.error('Error searching for color:', error.message);
+        console.error("Error searching for color:", error.message);
         throw new Error(`Error searching for color: ${error.message}`);
       } finally {
         await session.close();
       }
     },
-    
-    
+
+    cardSets: async (_, { skip = 0, limit = 30 }, { driver }) => {
+      if (!driver) {
+        throw new Error("Neo4j driver not initialized");
+      }
+
+      const session = driver.session({ defaultAccessMode: neo4j.session.READ });
+      const query = `
+            MATCH (c:CardSet)
+            RETURN c.uuid AS uuid, 
+                   c.name AS name, 
+                   c.manaValue AS manaValue, 
+                   c.rarity AS rarity, 
+                   c.type AS type, 
+                   [ (c)-[:HAS_COLOR]->(co:Color) | co.name ] AS colors,
+                   c.power AS power, 
+                   c.toughness AS toughness, 
+                   c.flavorText AS flavorText, 
+                   [ (c)-[:HAS_ARTIST]->(a:Artist) | a.name ][0] AS artist, 
+                   c.hasFoil AS hasFoil, 
+                   c.hasNonFoil AS hasNonFoil, 
+                   c.borderColor AS borderColor, 
+                   c.frameVersion AS frameVersion, 
+                   c.originalText AS originalText, 
+                   [ (c)-[:HAS_KEYWORD]->(k:Keyword) | k.name ] AS keywords, 
+                   [ (c)-[:HAS_SUBTYPE]->(st:Subtype) | st.name ] AS subtypes, 
+                   [ (c)-[:HAS_SUPERTYPE]->(su:Supertype) | su.name ] AS supertypes
+            SKIP $skip
+            LIMIT $limit
+          `;
+
+      try {
+        const result = await session.run(query, {
+          skip: neo4j.int(skip),
+          limit: neo4j.int(limit),
+        });
+
+        // Map the Neo4j result into an array of card sets
+        return result.records.map((record) => ({
+          uuid: record.get("uuid"),
+          name: record.get("name"),
+          manaValue: record.get("manaValue"),
+          rarity: record.get("rarity"),
+          type: record.get("type"),
+          colors: record.get("colors"),
+          power: record.get("power"),
+          toughness: record.get("toughness"),
+          flavorText: record.get("flavorText"),
+          artist: record.get("artist"),
+          hasFoil: record.get("hasFoil"),
+          hasNonFoil: record.get("hasNonFoil"),
+          borderColor: record.get("borderColor"),
+          frameVersion: record.get("frameVersion"),
+          originalText: record.get("originalText"),
+          keywords: record.get("keywords"),
+          subtypes: record.get("subtypes"),
+          supertypes: record.get("supertypes"),
+        }));
+      } catch (error) {
+        console.error("Error fetching card sets:", error.message);
+        throw new Error(`Error fetching card sets: ${error.message}`);
+      } finally {
+        await session.close();
+      }
+    },
 
     // Search sets and cards by name
     search: async (_, { searchTerm }, { driver }) => {
       if (!driver) {
-        throw new Error('Neo4j driver not initialized');
+        throw new Error("Neo4j driver not initialized");
       }
-    
+
       const session = driver.session({ defaultAccessMode: neo4j.session.READ });
       const query = `
         MATCH (s:Set)
@@ -218,20 +280,26 @@ const resolvers = {
       `;
       try {
         const result = await session.run(query, { searchTerm });
-        return result.records.map(record => ({
-          name: record.get('name'),
-          category: record.get('category'),
-          code: record.get('code') || null,
-          uuid: record.get('uuid') || null,
-        })) || [];
+        return (
+          result.records.map((record) => ({
+            name: record.get("name"),
+            category: record.get("category"),
+            code: record.get("code") || null,
+            uuid: record.get("uuid") || null,
+          })) || []
+        );
       } catch (error) {
-        console.error('Error searching sets, cards, and artists:', error.message);
-        throw new Error(`Error searching sets, cards, and artists: ${error.message}`);
+        console.error(
+          "Error searching sets, cards, and artists:",
+          error.message
+        );
+        throw new Error(
+          `Error searching sets, cards, and artists: ${error.message}`
+        );
       } finally {
         await session.close();
       }
     },
-    
   },
 };
 
