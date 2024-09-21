@@ -123,10 +123,52 @@ const getCardsQuery = gql`
   }
 `;
 
+const getCardsRarityQuery = gql`
+  query GetRarity($name: String!, $skip: Int = 0, $limit: Int = 10) {
+    rarity(name: $name, skip: $skip, limit: $limit) {
+      cards {
+        uuid
+        name
+        manaValue
+        rarity
+        type
+        power
+        toughness
+        colors
+        keywords
+        subtypes
+        supertypes
+        code  # Make sure you include the code field in the query
+      }
+    }
+  }
+`;
+
+const getCardsManaValueQuery = gql`
+  query GetManaValue($value: Float!, $skip: Int = 0, $limit: Int = 10) {
+    manaValue(value: $value, skip: $skip, limit: $limit) {
+      cards {
+        uuid
+        name
+        manaValue
+        rarity
+        type
+        power
+        toughness
+        colors
+        keywords
+        subtypes
+        supertypes
+        code  # Make sure you include the code field in the query
+      }
+    }
+  }
+`;
+
 // Step 2: Handle Variable Mapping Based on Category
 const getVariablesByCategory = (
-  id: string,
-  category: "Card" | "Set" | "Artist" | "Color" | "Cards",
+  id: string | GLfloat,
+  category: "Card" | "Set" | "Artist" | "Color" | "Cards" | "Rarity" | "ManaValue",
   skip: number,
   limit: number
 ) => {
@@ -141,6 +183,10 @@ const getVariablesByCategory = (
       return { name: id, skip, limit };
     case "Cards":
       return { skip, limit };
+    case "Rarity":
+      return { name: id, skip, limit };
+    case "ManaValue":
+      return { value: id, skip, limit };
     default:
       throw new Error("Invalid category");
   }
@@ -185,8 +231,8 @@ const executeGraphQLQuery = async (
 
 // Step 4: Main fetchLore Function
 export const fetchLore = async (
-  id: string,
-  category: "Card" | "Set" | "Artist" | "Color" | "Cards",
+  id: string | GLfloat,
+  category: "Card" | "Set" | "Artist" | "Color" | "Cards" | "Rarity" | "ManaValue",
   options: FetchLoreOptions = {}
 ) => {
   if (!id && category !== "Cards") {
@@ -208,6 +254,10 @@ export const fetchLore = async (
         return getColorQuery;
       case "Cards":
         return getCardsQuery;
+      case "Rarity":
+        return getCardsRarityQuery;
+      case "ManaValue":
+        return getCardsManaValueQuery;
       default:
         throw new Error("Invalid category");
     }
@@ -233,6 +283,10 @@ export const fetchLore = async (
       return data.color;
     case "Cards":
       return data.cardSets;
+    case "Rarity":
+      return data.rarity;
+    case "ManaValue":
+      return data.manaValue;
     default:
       throw new Error("Invalid category");
   }

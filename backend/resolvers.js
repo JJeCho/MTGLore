@@ -142,6 +142,108 @@ const resolvers = {
       }
     },
 
+    rarity: async (_, { name, skip = 0, limit = 30 }, { driver }) => {
+      const session = driver.session({ defaultAccessMode: neo4j.session.READ });
+    
+      const query = `
+        MATCH (c:CardSet {rarity: $name})
+        OPTIONAL MATCH (c)-[:BELONGS_TO]->(s:Set)  // Match the set that the card belongs to
+        WITH c, s
+        ORDER BY c.name
+        SKIP $skip
+        LIMIT $limit
+        RETURN collect({
+          name: c.name,
+          manaValue: c.manaValue,
+          uuid: c.uuid,
+          rarity: c.rarity,
+          type: c.type,
+          power: c.power,
+          toughness: c.toughness,
+          code: s.code,  // Retrieve the code from the Set node
+          colors: [ (c)-[:HAS_COLOR]->(co:Color) | co.name ],
+          keywords: [ (c)-[:HAS_KEYWORD]->(k:Keyword) | k.name ],
+          subtypes: [ (c)-[:HAS_SUBTYPE]->(st:Subtype) | st.name ],
+          supertypes: [ (c)-[:HAS_SUPERTYPE]->(su:Supertype) | su.name ]
+        }) AS cards
+      `;
+    
+      try {
+        const result = await session.run(query, {
+          name,
+          skip: neo4j.int(skip),
+          limit: neo4j.int(limit),
+        });
+    
+        if (!result.records.length) {
+          throw new Error(`No color found with rarity "${name}"`);
+        }
+    
+        const record = result.records[0];
+        console.log(record.get("cards"));
+        return {
+          cards: record.get("cards"),
+        };
+      } catch (error) {
+        console.error("Error searching for color:", error.message);
+        throw new Error(`Error searching for color: ${error.message}`);
+      } finally {
+        await session.close();
+      }
+    },
+
+    manaValue: async (_, { value, skip = 0, limit = 30 }, { driver }) => {
+      const session = driver.session({ defaultAccessMode: neo4j.session.READ });
+    
+      const query = `
+        MATCH (c:CardSet {manaValue: $value})
+        OPTIONAL MATCH (c)-[:BELONGS_TO]->(s:Set)  // Match the set that the card belongs to
+        WITH c, s
+        ORDER BY c.name
+        SKIP $skip
+        LIMIT $limit
+        RETURN collect({
+          name: c.name,
+          manaValue: c.manaValue,
+          uuid: c.uuid,
+          rarity: c.rarity,
+          type: c.type,
+          power: c.power,
+          toughness: c.toughness,
+          code: s.code,  // Retrieve the code from the Set node
+          colors: [ (c)-[:HAS_COLOR]->(co:Color) | co.name ],
+          keywords: [ (c)-[:HAS_KEYWORD]->(k:Keyword) | k.name ],
+          subtypes: [ (c)-[:HAS_SUBTYPE]->(st:Subtype) | st.name ],
+          supertypes: [ (c)-[:HAS_SUPERTYPE]->(su:Supertype) | su.name ]
+        }) AS cards
+      `;
+    
+      try {
+        const result = await session.run(query, {
+          value,
+          skip: neo4j.int(skip),
+          limit: neo4j.int(limit),
+        });
+    
+        if (!result.records.length) {
+          throw new Error(`No card found with manaValue "${value}"`);
+        }
+    
+        const record = result.records[0];
+        console.log(record.get("cards"));
+        return {
+          cards: record.get("cards"),
+        };
+      } catch (error) {
+        console.error("Error searching for color:", error.message);
+        throw new Error(`Error searching for color: ${error.message}`);
+      } finally {
+        await session.close();
+      }
+    },
+
+
+
     color: async (_, { name, skip = 0, limit = 30 }, { driver }) => {
       const session = driver.session({ defaultAccessMode: neo4j.session.READ });
     

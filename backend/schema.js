@@ -46,6 +46,16 @@ const typeDefs = gql`
     cards: [CardSet!]!
   }
 
+  type Rarity {
+    name: String!
+    cards: [CardSet!]!
+  }
+
+   type ManaValue {
+    manaValue: Float!
+    cards: [CardSet!]!
+  }
+
   # SearchResult type for combined set, card, and artist search results
   type SearchResult {
     name: String!
@@ -72,6 +82,10 @@ const typeDefs = gql`
     cardSet(uuid: String!): CardSet
 
     cardSets(skip: Int = 0, limit: Int = 30): [CardSet!]!
+
+    rarity(name: String!, skip: Int = 0, limit: Int = 30): Rarity
+
+    manaValue(value: Float!, skip: Int = 0, limit: Int = 30): ManaValue
   }
 `;
 

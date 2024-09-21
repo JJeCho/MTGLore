@@ -35,10 +35,10 @@
   / Create a GraphQL query that allows searching cards by color, with support for multi-color filtering.
   
 - **Frontend:**
-  - Implement a UI component to navigate to `/cards/` route and page where users can explore and filter all cards
+  + Implement a UI component to navigate to `/cards/` route and page where users can explore and filter all cards
   + Implement a UI component to navigate to `/colors/[color]` routes and pages.
-  - Connect the UI component to the backend query to filter cards by color(s).
-  - Display filtered results with corresponding color indicators.
+  / Connect the UI component to the backend query to filter cards by color(s).
+  + Display filtered results with corresponding color indicators.
 
 - **Testing:**
   - Test filtering logic to verify correct display of cards based on selected colors.
@@ -60,6 +60,7 @@
   - Implement a slider or input field for users to filter cards by mana value.
   - Display the mana value range dynamically and show matching cards in real time.
   - Enable users to combine mana value filtering with other filters (e.g., color or artist).
+  + Create a dynamic route to explore all cards of a man value
   
 - **Testing:**
   - Test the mana value query for accuracy and edge cases (e.g., extremely high or low values).
@@ -73,14 +74,15 @@
 
 #### Tasks:
 - **Backend:**
-  - Ensure the Neo4j database contains a `rarity` property (e.g., common, uncommon, rare, mythic rare).
-  - Create a GraphQL query to filter cards by rarity.
+  + Ensure the Neo4j database contains a `rarity` property (e.g., common, uncommon, rare, mythic rare).
+  + Create a GraphQL query to filter cards by rarity.
   - Index the `rarity` property for better query performance.
   
 - **Frontend:**
   - Add a dropdown or button-based UI for selecting card rarity on the search interface.
   - Connect the rarity filter to the GraphQL query and display matching cards.
   - Allow combining the rarity filter with other filters (e.g., color, mana value).
+  + Create a dynamic route for exploring all cards by a rarity
   
 - **Testing:**
   - Test the rarity filter for all categories to ensure correct functionality.
