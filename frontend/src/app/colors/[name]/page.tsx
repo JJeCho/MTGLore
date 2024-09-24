@@ -5,30 +5,8 @@ import { useRouter } from 'next/navigation';
 import { fetchLore } from "@/lib/api";
 import getBorderColor from "@/lib/borderColor";
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-
-type Card = {
-  uuid: string;
-  name: string;
-  manaValue: number | null;
-  convertedManaCost: number | null;
-  rarity: string | null;
-  type: string | null;
-  colors: string[] | null;
-  power: string | null;
-  toughness: string | null;
-  flavorText: string | null;
-  code: string | null;
-  artist: string | null;
-  hasFoil: boolean | null;
-  hasNonFoil: boolean | null;
-  borderColor: string | null;
-  frameVersion: string | null;
-  originalText: string | null;
-  keywords: string[] | null;
-  subtypes: string[] | null;
-  supertypes: string[] | null;
-};
+import { Card as ShadCNCard, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card } from "@/lib/types";
 
 type ColorData = {
   name: string;
@@ -96,7 +74,7 @@ const ColorsPage = ({ params }: { params: { name: string } }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
         {colorData.cards.map((card) => (
-          <Card
+          <ShadCNCard
             key={card.uuid}
             className="shadow-md hover:shadow-lg transition-shadow cursor-pointer"
             onClick={() => handleCardClick(card.uuid)}
@@ -124,7 +102,7 @@ const ColorsPage = ({ params }: { params: { name: string } }) => {
               <p className="text-sm"><strong>Subtypes:</strong> {card.subtypes?.join(', ')}</p>
               <p className="text-sm"><strong>Supertypes:</strong> {card.supertypes?.join(', ')}</p>
             </CardContent>
-          </Card>
+          </ShadCNCard>
         ))}
       </div>
     </div>

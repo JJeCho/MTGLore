@@ -6,30 +6,8 @@ import { fetchLore } from "@/lib/api";
 import axios from "axios";
 import { Card as ShadCNCard, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from "@/lib/types";
 
-type Card = {
-  name: string;
-  manaValue: number | null;
-  convertedManaCost: number | null;
-  rarity: string | null;
-  type: string | null;
-  colors: string[] | null;
-  power: string | null;
-  toughness: string | null;
-  flavorText: string | null;
-  artist: string | null;
-  hasFoil: boolean | null;
-  hasNonFoil: boolean | null;
-  borderColor: string | null;
-  frameVersion: string | null;
-  originalText: string | null;
-  keywords: string[] | null;
-  subtypes: string[] | null;
-  supertypes: string[] | null;
-  code: string[] | null;
-  setName: string[] | null;
-  scryfallId: string | null;
-};
 
 const CardPage = ({ params }: { params: { uuid: string } }) => {
   const [card, setCard] = useState<Card | null>(null);
@@ -47,6 +25,7 @@ const CardPage = ({ params }: { params: { uuid: string } }) => {
         const cardInfo = await axios.get(`https://api.scryfall.com/cards/${cardData.scryfallId}`);
         setCard(cardData);
         setCardInfo(cardInfo.data);
+        console.log(cardInfo.data)
       } catch (err) {
         setError("Error fetching card data");
       } finally {

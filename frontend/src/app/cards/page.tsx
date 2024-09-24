@@ -6,28 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-
-const colorMapping: Record<string, string> = {
-  W: "#FFFFFF",   // White
-  U: "#1E90FF",   // Blue
-  B: "#000000",   // Black
-  R: "#FF4500",   // Red
-  G: "#228B22",   // Green
-  C: "#606060",   // Colorless (optional)
-};
-
-type CardSet = {
-  uuid: string;
-  name: string;
-  manaValue: number | null;
-  rarity: string | null;
-  type: string | null;
-  colors: string[] | null;
-  power: string | null;
-  toughness: string | null;
-  flavorText: string | null;
-  artist: string | null;
-};
+import getBorderColor from "@/lib/borderColor";
+import { CardSet } from "@/lib/types";
 
 const CardsPage = () => {
   const router = useRouter();
@@ -72,21 +52,6 @@ const CardsPage = () => {
       ...prevFilters,
       [name]: name === "manaValue" ? parseFloat(value) || undefined : value || undefined,
     }));
-  };
-
-  const getBorderColor = (colors: string[] | null): string => {
-    if (!colors || colors.length === 0) {
-      return "#A9A9A9";
-    }
-
-    if (colors.length === 1) {
-      return colorMapping[colors[0]] || "#A9A9A9";
-    }
-
-    const gradientColors = colors
-      .map((color) => colorMapping[color] || "#A9A9A9")
-      .join(", ");
-    return `linear-gradient(45deg, ${gradientColors})`;
   };
 
   if (loading) return <p className="text-center text-lg font-semibold">Loading...</p>;

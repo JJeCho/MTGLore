@@ -7,24 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import  getBorderColor  from '@/lib/borderColor';
-
-type CardSet = {
-  uuid: string;
-  name: string;
-  manaValue: number | null;
-  rarity: string | null;
-  type: string | null;
-  colors: string[] | null;
-  artist: string | null;
-};
-
-type SetData = {
-  name: string;
-  releaseDate: string;
-  totalSetSize: number;
-  type: string;
-  cards: CardSet[];
-};
+import { SetData } from '@/lib/types';
 
 const SetPage = ({ params }: { params: { code: string } }) => {
   const { code } = params;

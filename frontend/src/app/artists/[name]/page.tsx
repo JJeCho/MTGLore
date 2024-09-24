@@ -6,15 +6,7 @@ import { fetchLore } from "@/lib/api";
 import getBorderColor from "@/lib/borderColor";
 import { Card as ShadCNCard, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-
-type Card = {
-  uuid: string;
-  name: string;
-  manaValue: number;
-  rarity: string;
-  type: string;
-  colors: string[];
-};
+import { Card } from "@/lib/types";
 
 const ArtistPage = ({ params }: { params: { name: string } }) => {
   const [artistData, setArtistData] = useState<{
@@ -98,7 +90,7 @@ const ArtistPage = ({ params }: { params: { name: string } }) => {
               <p className="text-gray-600">Rarity: {card.rarity}</p>
               <p className="text-gray-600">Type: {card.type}</p>
               <p className="text-gray-600">
-                Colors: {card.colors.join(", ") || "Colorless"}
+                Colors: {card.colors?.join(", ") || "Colorless"}
               </p>
             </CardContent>
           </ShadCNCard>

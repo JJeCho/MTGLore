@@ -4,32 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { fetchLore } from "@/lib/api";
 import getBorderColor from "@/lib/borderColor";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card as ShadCNCard, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/lib/types";
 
-type Card = {
-  uuid: string;
-  name: string;
-  manaValue: number | null;
-  convertedManaCost: number | null;
-  rarity: string | null;
-  type: string | null;
-  colors: string[] | null;
-  power: string | null;
-  toughness: string | null;
-  flavorText: string | null;
-  code: string[] | null;
-  setName: string[] | null;
-  artist: string | null;
-  hasFoil: boolean | null;
-  hasNonFoil: boolean | null;
-  borderColor: string | null;
-  frameVersion: string | null;
-  originalText: string | null;
-  keywords: string[] | null;
-  subtypes: string[] | null;
-  supertypes: string[] | null;
-};
 
 type RarityData = {
   name: string;
@@ -98,7 +76,7 @@ const RarityPage = ({ params }: { params: { name: string } }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
         {rarityData.cards.map((card) => (
-          <Card
+          <ShadCNCard
             key={card.uuid}
             className="shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
             onClick={() => handleCardClick(card.uuid)}
@@ -127,7 +105,7 @@ const RarityPage = ({ params }: { params: { name: string } }) => {
               <p className="text-sm"><strong>Subtypes:</strong> {card.subtypes?.join(', ')}</p>
               <p className="text-sm"><strong>Supertypes:</strong> {card.supertypes?.join(', ')}</p>
             </CardContent>
-          </Card>
+          </ShadCNCard>
         ))}
       </div>
     </div>
