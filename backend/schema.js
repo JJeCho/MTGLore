@@ -1,4 +1,4 @@
-const { gql } = require('apollo-server-express');
+const { gql } = require("apollo-server-express");
 
 const typeDefs = gql`
   # CardSet type (individual cards)
@@ -13,7 +13,7 @@ const typeDefs = gql`
     power: String
     toughness: String
     flavorText: String
-    artist: String  # Artist can be nullable
+    artist: String # Artist can be nullable
     hasFoil: Boolean
     hasNonFoil: Boolean
     borderColor: String
@@ -22,7 +22,9 @@ const typeDefs = gql`
     keywords: [String]
     subtypes: [String]
     supertypes: [String]
-    code: String
+    code: [String]
+    setName: [String]
+    scryfallId: String
   }
 
   # Set type (a collection of CardSets)
@@ -51,7 +53,7 @@ const typeDefs = gql`
     cards: [CardSet!]!
   }
 
-   type ManaValue {
+  type ManaValue {
     manaValue: Float!
     cards: [CardSet!]!
   }
@@ -81,7 +83,14 @@ const typeDefs = gql`
     # Fetch a card by its uuid
     cardSet(uuid: String!): CardSet
 
-    cardSets(skip: Int = 0, limit: Int = 30): [CardSet!]!
+    cardSets(
+      manaValue: Float
+      rarity: String
+      type: String
+      colorName: String
+      skip: Int = 0
+      limit: Int = 30
+    ): [CardSet!]!
 
     rarity(name: String!, skip: Int = 0, limit: Int = 30): Rarity
 

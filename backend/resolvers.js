@@ -1,14 +1,7 @@
 const neo4j = require("neo4j-driver");
 
-// Helper function to run a Cypher query and return results
-const runCypherQuery = async (session, query, params = {}) => {
-  const result = await session.run(query, params);
-  return result.records.map((record) => record.toObject());
-};
-
 const resolvers = {
   Query: {
-    // Fetch a set by its code (including expanded card details like colors and artist)
     set: async (_, { code }, { driver }) => {
       if (!driver) {
         throw new Error("Neo4j driver not initialized");
@@ -81,6 +74,9 @@ const resolvers = {
                c.borderColor AS borderColor,
                c.frameVersion AS frameVersion,
                c.originalText AS originalText,
+               c.scryfallId AS scryfallId,
+               [ (c)-[:BELONGS_TO]->(s:Set) | s.code ] AS code,
+                [ (c)-[:BELONGS_TO]->(s:Set) | s.name ] AS setName,
                [ (c)-[:HAS_KEYWORD]->(k:Keyword) | k.name ] AS keywords,
                [ (c)-[:HAS_SUBTYPE]->(st:Subtype) | st.name ] AS subtypes,
                [ (c)-[:HAS_SUPERTYPE]->(su:Supertype) | su.name ] AS supertypes
@@ -144,11 +140,10 @@ const resolvers = {
 
     rarity: async (_, { name, skip = 0, limit = 30 }, { driver }) => {
       const session = driver.session({ defaultAccessMode: neo4j.session.READ });
-    
+
       const query = `
         MATCH (c:CardSet {rarity: $name})
-        OPTIONAL MATCH (c)-[:BELONGS_TO]->(s:Set)  // Match the set that the card belongs to
-        WITH c, s
+       WITH c
         ORDER BY c.name
         SKIP $skip
         LIMIT $limit
@@ -160,25 +155,26 @@ const resolvers = {
           type: c.type,
           power: c.power,
           toughness: c.toughness,
-          code: s.code,  // Retrieve the code from the Set node
+          code: [ (c)-[:BELONGS_TO]->(s:Set) | s.code ],
+          setName: [ (c)-[:BELONGS_TO]->(s:Set) | s.name ],
           colors: [ (c)-[:HAS_COLOR]->(co:Color) | co.name ],
           keywords: [ (c)-[:HAS_KEYWORD]->(k:Keyword) | k.name ],
           subtypes: [ (c)-[:HAS_SUBTYPE]->(st:Subtype) | st.name ],
           supertypes: [ (c)-[:HAS_SUPERTYPE]->(su:Supertype) | su.name ]
         }) AS cards
       `;
-    
+
       try {
         const result = await session.run(query, {
           name,
           skip: neo4j.int(skip),
           limit: neo4j.int(limit),
         });
-    
+
         if (!result.records.length) {
           throw new Error(`No color found with rarity "${name}"`);
         }
-    
+
         const record = result.records[0];
         console.log(record.get("cards"));
         return {
@@ -194,11 +190,10 @@ const resolvers = {
 
     manaValue: async (_, { value, skip = 0, limit = 30 }, { driver }) => {
       const session = driver.session({ defaultAccessMode: neo4j.session.READ });
-    
+
       const query = `
         MATCH (c:CardSet {manaValue: $value})
-        OPTIONAL MATCH (c)-[:BELONGS_TO]->(s:Set)  // Match the set that the card belongs to
-        WITH c, s
+        WITH c
         ORDER BY c.name
         SKIP $skip
         LIMIT $limit
@@ -210,25 +205,26 @@ const resolvers = {
           type: c.type,
           power: c.power,
           toughness: c.toughness,
-          code: s.code,  // Retrieve the code from the Set node
+          code: [ (c)-[:BELONGS_TO]->(s:Set) | s.code ],
+          setName: [ (c)-[:BELONGS_TO]->(s:Set) | s.name ],
           colors: [ (c)-[:HAS_COLOR]->(co:Color) | co.name ],
           keywords: [ (c)-[:HAS_KEYWORD]->(k:Keyword) | k.name ],
           subtypes: [ (c)-[:HAS_SUBTYPE]->(st:Subtype) | st.name ],
           supertypes: [ (c)-[:HAS_SUPERTYPE]->(su:Supertype) | su.name ]
         }) AS cards
       `;
-    
+
       try {
         const result = await session.run(query, {
           value,
           skip: neo4j.int(skip),
           limit: neo4j.int(limit),
         });
-    
+
         if (!result.records.length) {
           throw new Error(`No card found with manaValue "${value}"`);
         }
-    
+
         const record = result.records[0];
         console.log(record.get("cards"));
         return {
@@ -242,15 +238,12 @@ const resolvers = {
       }
     },
 
-
-
     color: async (_, { name, skip = 0, limit = 30 }, { driver }) => {
       const session = driver.session({ defaultAccessMode: neo4j.session.READ });
-    
+
       const query = `
         MATCH (c:Color {name: $name})-[:HAS_COLOR]-(card:CardSet)
-        OPTIONAL MATCH (card)-[:BELONGS_TO]->(s:Set)  // Match the set that the card belongs to
-        WITH c, card, s
+        WITH c, card
         ORDER BY card.name
         SKIP $skip
         LIMIT $limit
@@ -262,27 +255,27 @@ const resolvers = {
           type: card.type,
           power: card.power,
           toughness: card.toughness,
-          code: s.code,  // Retrieve the code from the Set node
+          code: [ (card)-[:BELONGS_TO]->(s:Set) | s.code ],
           colors: [ (card)-[:HAS_COLOR]->(co:Color) | co.name ],
           keywords: [ (card)-[:HAS_KEYWORD]->(k:Keyword) | k.name ],
           subtypes: [ (card)-[:HAS_SUBTYPE]->(st:Subtype) | st.name ],
           supertypes: [ (card)-[:HAS_SUPERTYPE]->(su:Supertype) | su.name ]
         }) AS cards
       `;
-    
+
       try {
         const result = await session.run(query, {
           name,
           skip: neo4j.int(skip),
           limit: neo4j.int(limit),
         });
-    
+
         if (!result.records.length) {
           throw new Error(`No color found with name "${name}"`);
         }
-    
+
         const record = result.records[0];
-    
+
         return {
           name: record.get("name"),
           cards: record.get("cards"),
@@ -295,43 +288,92 @@ const resolvers = {
       }
     },
 
-    cardSets: async (_, { skip = 0, limit = 30 }, { driver }) => {
+    cardSets: async (
+      _,
+      { manaValue, rarity, type, colorName, skip = 0, limit = 30 },
+      { driver }
+    ) => {
       if (!driver) {
         throw new Error("Neo4j driver not initialized");
       }
 
       const session = driver.session({ defaultAccessMode: neo4j.session.READ });
-      const query = `
-            MATCH (c:CardSet)
-            RETURN c.uuid AS uuid, 
-                   c.name AS name, 
-                   c.manaValue AS manaValue, 
-                   c.rarity AS rarity, 
-                   c.type AS type, 
-                   [ (c)-[:HAS_COLOR]->(co:Color) | co.name ] AS colors,
-                   c.power AS power, 
-                   c.toughness AS toughness, 
-                   c.flavorText AS flavorText, 
-                   [ (c)-[:HAS_ARTIST]->(a:Artist) | a.name ][0] AS artist, 
-                   c.hasFoil AS hasFoil, 
-                   c.hasNonFoil AS hasNonFoil, 
-                   c.borderColor AS borderColor, 
-                   c.frameVersion AS frameVersion, 
-                   c.originalText AS originalText, 
-                   [ (c)-[:HAS_KEYWORD]->(k:Keyword) | k.name ] AS keywords, 
-                   [ (c)-[:HAS_SUBTYPE]->(st:Subtype) | st.name ] AS subtypes, 
-                   [ (c)-[:HAS_SUPERTYPE]->(su:Supertype) | su.name ] AS supertypes
-            SKIP $skip
-            LIMIT $limit
-          `;
+
+      let query = `
+        MATCH (c:CardSet)
+      `;
+
+      const whereClauses = [];
+
+      if (manaValue !== undefined) {
+        whereClauses.push(`c.manaValue = $manaValue`);
+      }
+
+      if (rarity) {
+        whereClauses.push(`toLower(c.rarity) CONTAINS toLower($rarity)`);
+      }
+
+      if (type) {
+        whereClauses.push(`toLower(c.type) CONTAINS toLower($type)`);
+      }
+
+      if (whereClauses.length > 0) {
+        query += `WHERE ${whereClauses.join(" AND ")}\n`;
+      }
+
+      query += `
+        OPTIONAL MATCH (c)-[:HAS_COLOR]->(co:Color)
+      `;
+
+      const colorWhereClauses = [];
+
+      if (colorName) {
+        colorWhereClauses.push(`toLower(co.name) CONTAINS toLower($colorName)`);
+      }
+
+      if (colorWhereClauses.length > 0) {
+        query += `WHERE ${colorWhereClauses.join(" AND ")}\n`;
+      }
+
+      query += `
+        WITH c,
+             collect(DISTINCT co.name) AS colors
+        ORDER BY c.name
+        SKIP $skip
+        LIMIT $limit
+        RETURN 
+          c.uuid AS uuid, 
+          c.name AS name, 
+          c.manaValue AS manaValue, 
+          c.rarity AS rarity, 
+          c.type AS type, 
+          colors,
+          c.power AS power, 
+          c.toughness AS toughness, 
+          c.flavorText AS flavorText, 
+          [ (c)-[:HAS_ARTIST]->(a:Artist) | a.name ][0] AS artist, 
+          c.hasFoil AS hasFoil, 
+          c.hasNonFoil AS hasNonFoil, 
+          c.borderColor AS borderColor, 
+          c.frameVersion AS frameVersion, 
+          c.originalText AS originalText, 
+          [ (c)-[:HAS_KEYWORD]->(k:Keyword) | k.name ] AS keywords, 
+          [ (c)-[:HAS_SUBTYPE]->(st:Subtype) | st.name ] AS subtypes, 
+          [ (c)-[:HAS_SUPERTYPE]->(su:Supertype) | su.name ] AS supertypes
+      `;
 
       try {
-        const result = await session.run(query, {
-          skip: neo4j.int(skip),
-          limit: neo4j.int(limit),
-        });
+        const params = { skip: neo4j.int(skip), limit: neo4j.int(limit) };
+        if (manaValue !== undefined) params.manaValue = manaValue;
+        if (rarity) params.rarity = rarity;
+        if (type) params.type = type;
+        if (colorName) params.colorName = colorName;
 
-        // Map the Neo4j result into an array of card sets
+        console.log("Final Cypher Query:", query);
+        console.log("Parameters:", params);
+
+        const result = await session.run(query, params);
+
         return result.records.map((record) => ({
           uuid: record.get("uuid"),
           name: record.get("name"),
@@ -360,7 +402,6 @@ const resolvers = {
       }
     },
 
-    // Search sets and cards by name
     search: async (_, { searchTerm }, { driver }) => {
       if (!driver) {
         throw new Error("Neo4j driver not initialized");

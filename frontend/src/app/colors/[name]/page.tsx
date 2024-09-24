@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { fetchLore } from "@/lib/api";
+import getBorderColor from "@/lib/borderColor";
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 type Card = {
   uuid: string;
@@ -62,7 +65,6 @@ const ColorsPage = ({ params }: { params: { name: string } }) => {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, skip]);
 
   if (loading)
@@ -73,38 +75,56 @@ const ColorsPage = ({ params }: { params: { name: string } }) => {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-gray-100 to-gray-300 p-4 sm:p-6 lg:p-8">
-      <h1 className="text-3xl font-bold mb-4">Color: {colorData.name}</h1>
-      <div className="flex mb-2">
-        <button
-          onClick={() => setSkip((prevSkip) => Math.max(0, Math.floor(prevSkip - limit)))}
+      <h1 className="text-4xl font-bold mb-6">Color: {colorData.name}</h1>
+
+      <div className="flex mb-6 space-x-4">
+        <Button
+          variant="default"
+          onClick={() => setSkip((prevSkip) => Math.max(0, prevSkip - limit))}
           disabled={skip === 0}
-          className="px-4 py-2 bg-blue-500 text-white rounded mr-2 disabled:opacity-50"
         >
           Previous
-        </button>
-        <button
-          onClick={() => setSkip((prevSkip) => Math.floor(prevSkip + limit))}
+        </Button>
+        <Button
+          variant="default"
+          onClick={() => setSkip((prevSkip) => prevSkip + limit)}
           disabled={colorData.cards.length < limit}
-          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
         >
           Next
-        </button>
+        </Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
         {colorData.cards.map((card) => (
-          <div key={card.uuid} onClick={() => handleCardClick(card.uuid)} className="bg-white shadow-md rounded-lg p-4 w-full">
-            <h2 className="text-xl font-semibold mb-2">{card.name}</h2>
-            <p className="text-sm"><strong>Mana Value:</strong> {card.manaValue}</p>
-            <p className="text-sm"><strong>Rarity:</strong> {card.rarity}</p>
-            <p className="text-sm"><strong>Type:</strong> {card.type}</p>
-            <p className="text-sm"><strong>Code:</strong> {card.code}</p>
-            <p className="text-sm"><strong>Colors:</strong> {card.colors?.join(', ')}</p>
-            <p className="text-sm"><strong>Power:</strong> {card.power}</p>
-            <p className="text-sm"><strong>Toughness:</strong> {card.toughness}</p>
-            <p className="text-sm"><strong>Keywords:</strong> {card.keywords?.join(', ')}</p>
-            <p className="text-sm"><strong>Subtypes:</strong> {card.subtypes?.join(', ')}</p>
-            <p className="text-sm"><strong>Supertypes:</strong> {card.supertypes?.join(', ')}</p>
-          </div>
+          <Card
+            key={card.uuid}
+            className="shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => handleCardClick(card.uuid)}
+            style={{
+              border: (card.colors?.length ?? 0) === 1 || (card.colors?.length ?? 0) === 0
+                ? `4px solid ${getBorderColor(card.colors)}`
+                : "4px solid transparent",
+              borderImage: (card.colors?.length ?? 0) > 1
+                ? `${getBorderColor(card.colors)} 1`
+                : undefined,
+            }}
+          >
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">{card.name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm"><strong>Mana Value:</strong> {card.manaValue}</p>
+              <p className="text-sm"><strong>Rarity:</strong> {card.rarity}</p>
+              <p className="text-sm"><strong>Type:</strong> {card.type}</p>
+              <p className="text-sm"><strong>Code:</strong> {card.code}</p>
+              <p className="text-sm"><strong>Colors:</strong> {card.colors?.join(', ')}</p>
+              <p className="text-sm"><strong>Power:</strong> {card.power}</p>
+              <p className="text-sm"><strong>Toughness:</strong> {card.toughness}</p>
+              <p className="text-sm"><strong>Keywords:</strong> {card.keywords?.join(', ')}</p>
+              <p className="text-sm"><strong>Subtypes:</strong> {card.subtypes?.join(', ')}</p>
+              <p className="text-sm"><strong>Supertypes:</strong> {card.supertypes?.join(', ')}</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>

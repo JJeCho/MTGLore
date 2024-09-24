@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import ClientOnlyProvider from '@/components/ClientOnlyProvider'; // Import the client-side wrapper
+import ClientOnlyProvider from '@/components/ClientOnlyProvider';
+import Navigation from '@/components/Navigation';
+
 
 import "./globals.css";
 
@@ -25,14 +27,21 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Wrap the children in the client-side ApolloProvider */}
         <ClientOnlyProvider>
-          {children}
+          <header className="bg-white shadow-md">
+            <nav className="container mx-auto p-4">
+              <Navigation />
+            </nav>
+          </header>
+          <main>
+            {children}
+          </main>
         </ClientOnlyProvider>
       </body>
     </html>

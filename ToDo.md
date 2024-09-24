@@ -52,15 +52,15 @@
 
 #### Tasks:
 - **Backend:**
-  - Create a GraphQL query to filter cards based on their mana value.
-  - Support filtering by a specific mana value or a range (e.g., 2-4 mana).
+  + Create a GraphQL query to filter cards based on their mana value.
+  + Support filtering by a specific mana value or a range (e.g., 2-4 mana).
   - Optimize the query to handle large ranges or multiple results efficiently.
   
 - **Frontend:**
-  - Implement a slider or input field for users to filter cards by mana value.
+  + Implement a slider or input field for users to filter cards by mana value.
   - Display the mana value range dynamically and show matching cards in real time.
-  - Enable users to combine mana value filtering with other filters (e.g., color or artist).
-  + Create a dynamic route to explore all cards of a man value
+  + Enable users to combine mana value filtering with other filters (e.g., color or artist).
+  + Create a dynamic route to explore all cards of a mana value
   
 - **Testing:**
   - Test the mana value query for accuracy and edge cases (e.g., extremely high or low values).
@@ -80,8 +80,8 @@
   
 - **Frontend:**
   - Add a dropdown or button-based UI for selecting card rarity on the search interface.
-  - Connect the rarity filter to the GraphQL query and display matching cards.
-  - Allow combining the rarity filter with other filters (e.g., color, mana value).
+  + Connect the rarity filter to the GraphQL query and display matching cards.
+  + Allow combining the rarity filter with other filters (e.g., color, mana value).
   + Create a dynamic route for exploring all cards by a rarity
   
 - **Testing:**
@@ -96,12 +96,12 @@
 
 #### Tasks:
 - **Backend:**
-  - Ensure each card node in Neo4j contains an `imageUrl` property to store the card's image link.
-  - Update queries to include the `imageUrl` property in the response.
   
 - **Frontend:**
-  - Modify the card display component to show a preview image next to the card name.
-  - Ensure images load asynchronously and efficiently to avoid UI delays.
+  + Use Scryfall API to retrieve image URI's for cards upon loading card/[uuid] page
+  - Utilize additional information from Scryfall API response
+  + Modify the card page to show a preview image.
+  + Ensure images load asynchronously and efficiently to avoid UI delays.
   - Add functionality to enlarge the preview image when hovered or clicked.
   
 - **Testing:**
@@ -129,6 +129,26 @@
   - Test the layout across devices and screen sizes to ensure responsiveness on mobile and desktop.
 
 ---
+
+  - change json reader to save mana cost in descriptive format
+  - add custom input for pagination limit
+  - display symbols for mana type,
+  - set page display more info about set
+
+### Bug Fixes
+#### Tasks:
+- **Frontend:**
+  - move type defs and constants into separate file
+  - add cursor pointer to elements with onClick
+  - color page, mana page, rarity page conditionally render values such as power and toughness
+  - all cards page mana value input should allow numbers > 0 
+  - all cards page change rarity input to dropdown select
+  - all cards page implement advanced search functionality for type
+  - all cards page change color input to dropdown select
+  - all cards page display more information
+
+- **Backend:**
+  - all cards query return more information
 
 **End of Tasks**
 

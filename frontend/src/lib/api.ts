@@ -24,6 +24,9 @@ const getCardQuery = gql`
       toughness
       flavorText
       artist
+      code
+      setName
+      scryfallId
       hasFoil
       hasNonFoil
       borderColor
@@ -99,8 +102,22 @@ const getColorQuery = gql`
 `;
 
 const getCardsQuery = gql`
-  query GetCardSets($skip: Int = 0, $limit: Int = 30) {
-    cardSets(skip: $skip, limit: $limit) {
+  query GetCards(
+    $manaValue: Float
+    $rarity: String
+    $type: String
+    $colorName: String
+    $skip: Int = 0
+    $limit: Int = 30
+  ) {
+    cardSets(
+      manaValue: $manaValue
+      rarity: $rarity
+      type: $type
+      colorName: $colorName
+      skip: $skip
+      limit: $limit
+    ) {
       uuid
       name
       manaValue
@@ -123,6 +140,7 @@ const getCardsQuery = gql`
   }
 `;
 
+
 const getCardsRarityQuery = gql`
   query GetRarity($name: String!, $skip: Int = 0, $limit: Int = 10) {
     rarity(name: $name, skip: $skip, limit: $limit) {
@@ -134,11 +152,12 @@ const getCardsRarityQuery = gql`
         type
         power
         toughness
+        code
+        setName
         colors
         keywords
         subtypes
         supertypes
-        code  # Make sure you include the code field in the query
       }
     }
   }
@@ -168,9 +187,22 @@ const getCardsManaValueQuery = gql`
 // Step 2: Handle Variable Mapping Based on Category
 const getVariablesByCategory = (
   id: string | GLfloat,
-  category: "Card" | "Set" | "Artist" | "Color" | "Cards" | "Rarity" | "ManaValue",
+  category:
+    | "Card"
+    | "Set"
+    | "Artist"
+    | "Color"
+    | "Cards"
+    | "Rarity"
+    | "ManaValue",
   skip: number,
-  limit: number
+  limit: number,
+  filters?: {
+    manaValue?: number;
+    rarity?: string;
+    type?: string;
+    colorName?: string;
+  }
 ) => {
   switch (category) {
     case "Card":
@@ -182,7 +214,7 @@ const getVariablesByCategory = (
     case "Color":
       return { name: id, skip, limit };
     case "Cards":
-      return { skip, limit };
+      return { skip, limit, ...filters };
     case "Rarity":
       return { name: id, skip, limit };
     case "ManaValue":
@@ -232,8 +264,21 @@ const executeGraphQLQuery = async (
 // Step 4: Main fetchLore Function
 export const fetchLore = async (
   id: string | GLfloat,
-  category: "Card" | "Set" | "Artist" | "Color" | "Cards" | "Rarity" | "ManaValue",
-  options: FetchLoreOptions = {}
+  category:
+    | "Card"
+    | "Set"
+    | "Artist"
+    | "Color"
+    | "Cards"
+    | "Rarity"
+    | "ManaValue",
+  options: FetchLoreOptions = {},
+  filters?: {
+    manaValue?: number;
+    rarity?: string;
+    type?: string;
+    colorName?: string;
+  }
 ) => {
   if (!id && category !== "Cards") {
     throw new Error("ID and category must be provided");
@@ -253,7 +298,7 @@ export const fetchLore = async (
       case "Color":
         return getColorQuery;
       case "Cards":
-        return getCardsQuery;
+        return getCardsQuery; // Use the new filtered query
       case "Rarity":
         return getCardsRarityQuery;
       case "ManaValue":
@@ -263,8 +308,8 @@ export const fetchLore = async (
     }
   })();
 
-  // Prepare variables based on category
-  const variables = getVariablesByCategory(id, category, Math.floor(skip), Math.floor(limit));
+  // Prepare variables based on category and filters
+  const variables = getVariablesByCategory(id, category, Math.floor(skip), Math.floor(limit), filters);
 
   console.log("Sending GraphQL request with variables:", variables);
 
@@ -282,6 +327,7 @@ export const fetchLore = async (
     case "Color":
       return data.color;
     case "Cards":
+      console.log(data.cardSets);
       return data.cardSets;
     case "Rarity":
       return data.rarity;
