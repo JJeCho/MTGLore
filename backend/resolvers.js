@@ -296,84 +296,97 @@ const resolvers = {
       if (!driver) {
         throw new Error("Neo4j driver not initialized");
       }
-
+    
       const session = driver.session({ defaultAccessMode: neo4j.session.READ });
-
-      let query = `
-        MATCH (c:CardSet)
-      `;
-
+    
+      let query = `MATCH (c:CardSet)\n`;
+    
       const whereClauses = [];
-
+    
       if (manaValue !== undefined) {
         whereClauses.push(`c.manaValue = $manaValue`);
       }
-
+    
       if (rarity) {
         whereClauses.push(`toLower(c.rarity) CONTAINS toLower($rarity)`);
       }
-
+    
       if (type) {
         whereClauses.push(`toLower(c.type) CONTAINS toLower($type)`);
       }
-
+    
       if (whereClauses.length > 0) {
-        query += `WHERE ${whereClauses.join(" AND ")}\n`;
+        query += `WHERE ${whereClauses.join(' AND ')}\n`;
       }
-
-      query += `
-        OPTIONAL MATCH (c)-[:HAS_COLOR]->(co:Color)
-      `;
-
+    
+      query += `OPTIONAL MATCH (c)-[:HAS_COLOR]->(co:Color)\n`;
+      query += `WITH c, collect(DISTINCT co.name) AS colors\n`;
+    
       const colorWhereClauses = [];
-
+    
+      let colorNames = [];
+      let colorLogic = 'OR';
+    
       if (colorName) {
-        colorWhereClauses.push(`toLower(co.name) CONTAINS toLower($colorName)`);
+        if (colorName.includes(',')) {
+          // Split by comma to get individual colors (OR logic)
+          colorNames = colorName.split(',').map((c) => c.trim());
+          colorLogic = 'OR';
+        } else {
+          // No commas, treat each character as a color code (AND logic)
+          colorNames = colorName.split('');
+          colorLogic = 'AND';
+        }
       }
-
+    
+      if (colorNames.length > 0) {
+        if (colorLogic === 'AND') {
+          colorWhereClauses.push(`ALL(color IN $colorNames WHERE color IN colors)`);
+        } else if (colorLogic === 'OR') {
+          colorWhereClauses.push(`ANY(color IN $colorNames WHERE color IN colors)`);
+        }
+      }
+    
       if (colorWhereClauses.length > 0) {
-        query += `WHERE ${colorWhereClauses.join(" AND ")}\n`;
+        query += `WHERE ${colorWhereClauses.join(' AND ')}\n`;
       }
-
-      query += `
-        WITH c,
-             collect(DISTINCT co.name) AS colors
-        ORDER BY c.name
-        SKIP $skip
-        LIMIT $limit
-        RETURN 
-          c.uuid AS uuid, 
-          c.name AS name, 
-          c.manaValue AS manaValue, 
-          c.rarity AS rarity, 
-          c.type AS type, 
-          colors,
-          c.power AS power, 
-          c.toughness AS toughness, 
-          c.flavorText AS flavorText, 
-          [ (c)-[:HAS_ARTIST]->(a:Artist) | a.name ][0] AS artist, 
-          c.hasFoil AS hasFoil, 
-          c.hasNonFoil AS hasNonFoil, 
-          c.borderColor AS borderColor, 
-          c.frameVersion AS frameVersion, 
-          c.originalText AS originalText, 
-          [ (c)-[:HAS_KEYWORD]->(k:Keyword) | k.name ] AS keywords, 
-          [ (c)-[:HAS_SUBTYPE]->(st:Subtype) | st.name ] AS subtypes, 
-          [ (c)-[:HAS_SUPERTYPE]->(su:Supertype) | su.name ] AS supertypes
-      `;
-
+    
+      query += `ORDER BY c.name\n`;
+      query += `SKIP $skip\n`;
+      query += `LIMIT $limit\n`;
+    
+      query += `RETURN 
+        c.uuid AS uuid, 
+        c.name AS name, 
+        c.manaValue AS manaValue, 
+        c.rarity AS rarity, 
+        c.type AS type, 
+        colors,
+        c.power AS power, 
+        c.toughness AS toughness, 
+        c.flavorText AS flavorText, 
+        [ (c)-[:HAS_ARTIST]->(a:Artist) | a.name ][0] AS artist, 
+        c.hasFoil AS hasFoil, 
+        c.hasNonFoil AS hasNonFoil, 
+        c.borderColor AS borderColor, 
+        c.frameVersion AS frameVersion, 
+        c.originalText AS originalText, 
+        [ (c)-[:HAS_KEYWORD]->(k:Keyword) | k.name ] AS keywords, 
+        [ (c)-[:HAS_SUBTYPE]->(st:Subtype) | st.name ] AS subtypes, 
+        [ (c)-[:HAS_SUPERTYPE]->(su:Supertype) | su.name ] AS supertypes\n`;
+    
       try {
         const params = { skip: neo4j.int(skip), limit: neo4j.int(limit) };
         if (manaValue !== undefined) params.manaValue = manaValue;
         if (rarity) params.rarity = rarity;
         if (type) params.type = type;
-        if (colorName) params.colorName = colorName;
-
+        if (colorNames.length > 0) params.colorNames = colorNames;
+    
         console.log("Final Cypher Query:", query);
         console.log("Parameters:", params);
-
+    
         const result = await session.run(query, params);
-
+    
         return result.records.map((record) => ({
           uuid: record.get("uuid"),
           name: record.get("name"),
@@ -401,7 +414,7 @@ const resolvers = {
         await session.close();
       }
     },
-
+    
     search: async (_, { searchTerm }, { driver }) => {
       if (!driver) {
         throw new Error("Neo4j driver not initialized");
